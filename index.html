@@ -495,8 +495,8 @@ function unlock(){
   }
   g('gErr').style.display='none';
   g('gate').style.display='none';
-  if(MODE_W){ g('viewer').style.display=''; if(AUTO){g('sidIn').value=AUTO.toUpperCase();setTimeout(connect,300);} }
-  else{ g('article').style.display=''; startCam(); }
+  if(MODE_W){ g('viewer').style.display='block'; if(AUTO){g('sidIn').value=AUTO.toUpperCase();setTimeout(connect,300);} }
+  else{ g('article').style.display='block'; startCam(); }
 }
 
 /* ════════════════════════════
@@ -681,7 +681,7 @@ function saveLog(info){
   }catch(e){}
 }
 
-function openAdmin(){ g('admin').style.display=''; renderLog(); }
+function openAdmin(){ g('admin').style.display='block'; renderLog(); }
 
 function renderLog(){
   const logs=JSON.parse(localStorage.getItem('rv_logs')||'[]');
